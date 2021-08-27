@@ -1,0 +1,33 @@
+## These rules are intended to better monitor
+## docker container activity.  Currently only
+## file based.  Need to extend to network
+## and perhaps other activites.  See
+## https://www.admin-magazine.com/Archive/2018/43/Auditing-Docker-Containers-in-a-DevOps-Environment/(offset)/3
+
+## DEBUGGING REMOVE UNLESS TOLD OTHERWISE
+## /var/run/containerd/containerd.sock    sudo find / -name 'containerd' -print
+-a always,exit -F arch=b32 -S sendmsg,recvmsg -k socket-file
+#-a always,exit -F arch=b64 -S sendmsg,recvmsg -k socket-file
+
+## Monitor docker executables
+## NB: augenrules converts the '-k foo' into '-F key=foo'
+## We could go ahead and use '-F key=foo' and will still work
+-a always,exit -F path=/usr/bin/docker -k docker-executable-a
+-a always,exit -F path=/usr/bin/dockerd -k docker-daemon-a
+-a always,exit -F path=/usr/bin/docker-proxy -k docker-proxy-a
+
+## Add watch to docker file/directory
+## NB: can use -F key=foo or -k foo, augenrules convertes into -k foo
+##     unlike syscall (-a) which are converted into -F key=foo
+-w /usr/bin/docker -p rwxa -k docker-executable-w
+-w /usr/bin/dockerd -p rwxa -k docker-daemon-w
+-w /usr/bin/docker-proxy -p rwxa -k docker-proxy-w
+
+-w /var/lib/docker/ -p rwxa -k docker-directory-w
+
+
+## NB: syscalls are converted into '-F key=foo' and watches into '-k foo'
+## To make life easy just use '-k foo' and let augenrules convert
+
+## Added SYNERGIA, hopefully earlier rule captures but just in case
+-a always,exit -F arch=b32 -S mkdir,mkdirat -F key=mkdir

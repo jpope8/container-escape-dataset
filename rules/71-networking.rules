@@ -1,0 +1,14 @@
+## This is to check if the system is making or recieving connections
+## externally
+##-a always,exit -F arch=b64 -S accept,connect -F key=external-access
+
+## I think the syscall types are defined in the following files
+## Note sure why the example did not include arch=b32 liker other examples?
+## /usr/include/i386-linux-gnu/asm/unistd_64.h
+## https://www.linkedin.com/pulse/using-auditd-monitor-network-connections-alex-maestretti
+##-a always,exit -F arch=b64 -S socket,accept,connect,bind,listen,recvmsg,sendmsg,setsockopt -F key=network-access
+##-a always,exit -F arch=b64 -S socket,accept,connect,bind,listen,setsockopt -F key=network-access
+## JHP for some reason b32 does not like accept, causes error for augenrules
+#-a always,exit -F arch=b32 -S socket,connect,shutdown,bind,listen,socketpair,setsockopt -F key=network-access
+-a always,exit -F arch=b32 -S socket,connect,shutdown,bind,listen,socketpair,setsockopt,sendto,recvfrom -F key=network-access
+#-a always,exit -F arch=b64 -S socket,connect,accept,shutdown,bind,listen,socketpair,setsockopt -F key=network-access

@@ -1,0 +1,31 @@
+## Use these rules if you want to log container events
+## watch for container creation
+-a always,exit -F arch=b32 -S clone -F a0&0x7C020000 -F key=container-create
+#-a always,exit -F arch=b64 -S clone -F a0&0x7C020000 -F key=container-create
+
+## watch for containers that may change their configuration
+-a always,exit -F arch=b32 -S unshare,setns -F key=container-config
+#-a always,exit -F arch=b64 -S unshare,setns -F key=container-config
+
+## ADDED SYNERGIA
+## NB: Canonical rule is to have -F auid>=1000 -F auid!=4294967295
+## This is not desirable for Synergia.
+## The -F auid!=4294967295 option isused to exclude
+## users whose login UID is not set.
+## The -F auid>=1000 only monitors non-system accounts.
+## https://www.redhat.com/sysadmin/user-account-gid-uid
+
+
+
+## Monitor runc
+## runc is a command line client for running applications packaged
+## according to the Open Container Initiative (OCI) format.
+-a always,exit -F path=/usr/bin/runc -F key=container-activity
+-w /usr/bin/runc -p x -k container-execute
+## -a always,exit -F path=/usr/bin/runcon -F key=container-selinux
+
+
+## Monitor container overlay file activities
+## Default docker container overlay is in /usr/bin/docker/overlay2
+## Umbrella it is in /storage/docker/overlay2
+-w /storage/docker/overlay2 -p rwxa -k container-overlays
