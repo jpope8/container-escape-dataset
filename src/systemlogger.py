@@ -26,8 +26,8 @@ MAX_LOG_SIZE = 30 * ONE_MB # for production
 # Use .txt as extension for file we are logging to
 # Then when rolling, rename with .log extension.
 # This makes it easier to know which can be archived.
-TXT = '.txt'
-LOG = '_system.log'
+TXT = '_system.txt'
+LOG = '.log'
 
 
 

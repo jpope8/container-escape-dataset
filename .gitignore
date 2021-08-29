@@ -35,7 +35,7 @@ docs/api
 *.sql
 *.sqlite
 
-# OS generated files #
+# Mac OS generated files #
 ######################
 .DS_Store
 .DS_Store?
@@ -43,4 +43,15 @@ docs/api
 .Spotlight-V100
 .Trashes
 ehthumbs.db
+
+# Windows
 Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

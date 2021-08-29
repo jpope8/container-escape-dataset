@@ -23,7 +23,7 @@ class ScenarioA:
         Logging is not active.
         """
         # Start the container for unauthorized executing shell on host.
-        self.execute( 'docker run -d=true --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined attack_a bash' )
+        self.execute( 'docker run -d=true --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_shell_dos bash' )
 
     def start(self):
         """
@@ -51,7 +51,7 @@ class ScenarioA:
         Tears down the scenario, for example, stop container.
         Logging is not active
         """
-        self.execute( 'sudo docker stop ESCAPE_A' )
+        self.execute( 'docker stop ESCAPE_A' )
 
     def execute( self, command ):
         """

@@ -28,4 +28,4 @@
 ## Monitor container overlay file activities
 ## Default docker container overlay is in /usr/bin/docker/overlay2
 ## Umbrella it is in /storage/docker/overlay2
--w /storage/docker/overlay2 -p rwxa -k container-overlays
+-w /var/lib/docker/overlay2 -p rwxa -k container-overlays

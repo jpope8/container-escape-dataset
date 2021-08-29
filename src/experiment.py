@@ -34,7 +34,12 @@ import random
 import fileutil
 import threading
 
+import os.path
+from os import path
+
 from outstream import OutStream
+from instream import InStream
+
 from systemlogger import SystemLogger
 
 from scenarioA import ScenarioA
@@ -45,22 +50,21 @@ def execute( number, command ):
     """
     Convenience to call execute and print out results.
     """
+    #print( 'CMD: ' + command )
     result = command_line.execute( command )
     for line in result:
-        print('Step' + str(number) + ': ' + line)
+        if( len( line.strip() ) > 0 ):
+            print('Step' + str(number) + ': ' + line)
 
-#def loadRule( rulefilename ):
-#    # Make sure ownnership and permissions are correct, then load
-#    uid = 0
-#    gid = 0
-#    os.chown( rulefilename, uid, gid )
-#    os.chmod( rulefilename, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
-#    execute( 1, 'sudo auditctl -R ' + rulefilename )
-def loadRule( rulefilename ):
-    # Make sure ownership and permissions are correct, then load
-    execute( 1, 'sudo chown root:root ../rules/' + rulefilename )
-    execute( 1, 'sudo chmod 644 ../rules/' + rulefilename )
-    execute( 1, 'sudo auditctl -R ../rules/' + rulefilename )
+
+def loadRule( rulesDir, rulesFilename ):
+    """
+    Loads the given rule file.
+    """
+    # Load the base config, this erases any previous rules
+    loadruleCommand = 'sudo auditctl -R ' + os.path.join( rulesDir, rulesFilename )
+    execute( 2, loadruleCommand )
+
 
 def saveLogs(logpath, experimentpath, rename=False):
     """
@@ -75,34 +79,54 @@ def saveLogs(logpath, experimentpath, rename=False):
             continue
 
         #Check if the string starts with "audit.log." and ends with any [0-9] digit:
-        if( filename.startswith("audit.log") or filename.endswith(".log") ):
+        if( filename.endswith(".log") or filename.endswith(".txt") ):
             #print(entry)
             #archive(auditfile)
             newfile = os.path.join( experimentpath, filename )
             if( rename ):
                 newfilename = fileutil.getNameFromDate(logfile)
-                newfile = os.path.join( experimentpath, newfilename + '_audit.log' )
+                newfile = os.path.join( experimentpath, newfilename + '_' + filename )
             #os.rename( logfile, newfile )
             # Sadly have to sudo for the audit directory
+            #print('    logfile ' + str(logfile) )
+            #print('    newfile ' + str(newfile) )
             execute( 9, 'sudo mv ' + str(logfile) + ' ' + str(newfile) )
 
-def saveExperiment( scenarioTime ):
+
+def configAudit(rulesDir, auditDir):
     """
-    Creates a new experiment folder with the scenarioDate
-    in the /storage/logs/experiment/ directory.
-    Moves all auditd and system log files to this folder.
+    Sets up the auditd.conf file and copies to /etc/audit.
+    Should be called before running 'sudo service auditd start'.
+    Note that the auditd logging directory is set to auditDir
+    (versus default of /var/logs/audit).
     """
-    scenarioDate = fileutil.formatTime( scenarioTime )
-    # Check to see if file is too big, if so, archive
-    # List all files in a directory using os.listdir
-    experimentpath = '/storage/logs/experiment/' + scenarioDate
-    os.mkdir(experimentpath)
+    #infilename  = os.path.join(rulesDir, 'audit.temp')
+    #outfilename = os.path.join(rulesDir, 'audit.conf')
+    #infile = InStream('../')
+    
+    # First check if we have copied original audit.conf as a backup
+    if( not path.exists('/etc/audit/audit.backup') ):
+        execute( 2, 'sudo cp /etc/audit/auditd.conf /etc/audit/auditd.backup' )
+    # Now copy our audit.conf to the etc directory to be used by auditd service
+    templateFilename  = os.path.join(rulesDir, 'auditd.conf.template')
+    auditconfFilename = os.path.join(rulesDir, 'auditd.conf') # NB git ignores
+    
+    templateFile  = InStream(templateFilename)
+    auditconfFile = OutStream(auditconfFilename)
+    while( templateFile.hasNextLine() ):
+        line = templateFile.readLine()
+        if( line.startswith('log_file = ') ):
+            auditfilepath = os.path.join(auditDir, 'audit.log')
+            # We need to auditd.conf reference to be absolute instead of relative
+            line = 'log_file = ' + os.path.abspath(auditfilepath)
+        auditconfFile.writeln( line )
+    del(templateFile)
+    del(auditconfFile)
+    
+    execute( 2, 'sudo cp ' + auditconfFilename + ' /etc/audit/auditd.conf' )
+    
 
-    saveLogs( '/storage/logs/audit/', experimentpath, rename=True )
-    saveLogs( '/storage/logs/system/', experimentpath, rename=False )
-
-
-def annotate( scenario, scenarioTime ):
+def annotate( scenario, scenarioTime, logDir ):
     """
     Writes to annotation file the specified scenarioDate.
     """
@@ -110,7 +134,7 @@ def annotate( scenario, scenarioTime ):
     #    scenarioTime = time.time()
     scenarioDate = fileutil.formatTime( scenarioTime )
     # Save annotation
-    annotationFile = OutStream('annotated.txt', append=True)
+    annotationFile = OutStream( os.path.join( logDir , 'annotated.txt'), append=True)
     annotationFile.writef( '%.3f:{"scenario":"%s", "date":"%s"},\n',
                       scenarioTime, scenario.getName(), scenarioDate )
     del( annotationFile )
@@ -119,13 +143,30 @@ def annotate( scenario, scenarioTime ):
 # Test main function
 #
 def main():
-    if( len(sys.argv) != 3 ):
-        print('  Usage: <time in minutes> <attack scenario "A" | "B" | "None">')
+    if( len(sys.argv) != 4 ):
+        print('  Usage: <time in minutes> <directory to place log files> <attack scenario "A" | "B" | "None">')
         print('Example: 1 B')
         return
 
     seconds  = int(sys.argv[1]) * 60
-    scenarioName = sys.argv[2] # expect "A" or "B"
+    logDir   = sys.argv[2]
+    scenarioName = sys.argv[3] # expect "A" or "B"
+    
+    # Verify that the log dir exists and we can write to it
+    auditDir      = os.path.join(logDir, 'audit')
+    systemDir     = os.path.join(logDir, 'system')
+    experimentDir = os.path.join(logDir, 'experiment')
+    
+    if( not path.exists(logDir) ):
+        print( 'Specified log directory does not exist, please create first: ' + logDir )
+        return
+    if( not path.exists(auditDir) ):
+        os.mkdir(auditDir)
+    if( not path.exists(systemDir) ):
+        os.mkdir(systemDir)
+    if( not path.exists(experimentDir) ):
+        os.mkdir(experimentDir)
+    
 
     #---------------------------------#
     # Step 1: Initialize scenario.
@@ -141,7 +182,7 @@ def main():
         # catelog so similar to other experiments
         scenario = ScenarioZ()
         scenarioTime = time.time()
-        annotate(scenario, scenarioTime)
+        annotate(scenario, scenarioTime, logDir)
 
     simulateEvent = scenario.registerEvent()
     scenario.init() # logging not active
@@ -157,34 +198,63 @@ def main():
     # Otherwise auditctl -R fails silently and does not apply rules
     # Perhaps use if to ensure requirements are met and only chown/chmod if not
     #---------------------------------#
+    # Make sure ownnership and permissions are correct for rules files
+    # sudo chown root:root ../rules/*.rules
+    
+    rulesDir = os.path.abspath( '../rules/' )
+    for entry in os.listdir('../rules/'):
+        #if( os.path.isfile(filefolder) and filefolder.endswith('.rules') ):
+        rulesfile = os.path.join(rulesDir, entry)
+        if( os.path.isfile(rulesfile) and entry.endswith('.rules') ):
+            #print( 'File: ' + str(rulesfile) )
+            execute( 2, 'sudo chown root:root ' + rulesfile )
+            execute( 2, 'sudo chmod 644 ' + rulesfile )
+    #execute( 2, 'sudo chown root:root ' + rulesDir + '*.rules' )
+    #execute( 2, 'sudo chmod 644 ' + rulesDir + '*.rules' )
+    #execute( 2, 'sudo ls -la ' + rulesDir + '*.rules' )
+    #execute( 2, 'sudo ls -la ' + rulesDir )
+    
+    # Make sure the auditd.conf file is setup correctly, use our custom file
+    configAudit( rulesDir, auditDir )
+    
+    #---------------------------------#
+    # Step 2: Start system logging
+    #---------------------------------#
+    delaySeconds = 1
+    systemLogger = SystemLogger( systemDir, delaySeconds )
+    systemLogger.start(daemon=True) # keeps from possibly hanging
+    
+    #---------------------------------#
+    # Step 2: Start audit logging
+    #---------------------------------#
     execute( 2, 'sudo service auditd start' )
-    loadRule( '10-base-config.rules' )
+    
+    # Load the base config, this erases any previous rules
+    loadRule( rulesDir, '10-base-config.rules' )
 
-    monitor_pid.exclude('systemlogger.py') # not necessary but safe
+    # Now try to exclude the instrumentation processes
+    monitor_pid.exclude('systemlogger.py')
     monitor_pid.exclude('experiment.py')
 
-    loadRule( '10-procmon.rules' )
-    loadRule( '30-stig.rules' )
-    loadRule( '31-privileged.rules' )
-    loadRule( '33-docker.rules' )
-    loadRule( '41-containers.rules' )
-    loadRule( '43-module-load.rules' )
-    loadRule( '71-networking.rules' )
-    loadRule( '99-finalize.rules' )
+    # Now load the bulk of the rules
+    loadRule( rulesDir, '10-procmon.rules' )
+    loadRule( rulesDir, '30-stig.rules' )
+    loadRule( rulesDir, '31-privileged.rules' )
+    loadRule( rulesDir, '33-docker.rules' )
+    loadRule( rulesDir, '41-containers.rules' )
+    loadRule( rulesDir, '43-module-load.rules' )
+    loadRule( rulesDir, '71-networking.rules' )
+    loadRule( rulesDir, '99-finalize.rules' )
 
     # After starting scenarios so we capture their docker processes
     monitor_pid.monitor( 'docker-proxy' );
 
     # Sanity check to see auditd logging is working
-    execute( 2, 'sudo ls -la /storage/logs/audit/audit.log' )
+    auditfile = os.path.join(auditDir, 'audit.log')
+    execute( 2, 'sudo ls -la ' + auditfile )
+    # Wait until end to save the audit rules used in the experiment
 
-    #---------------------------------#
-    # Step 2: Start system logging
-    #---------------------------------#
-    systemDir = '/storage/logs/system'
-    delaySeconds = 1
-    systemLogger = SystemLogger( systemDir, delaySeconds )
-    systemLogger.start(daemon=True) # keeps from possibly hanging
+    
 
     #---------------------------------#
     #Step 3: Start scenario
@@ -203,7 +273,7 @@ def main():
         if( simulateEvent is True and secondsPassed >= attackSecond ):
             scenarioTime = time.time()
             scenario.onEvent()
-            annotate(scenario, scenarioTime)
+            annotate(scenario, scenarioTime, logDir)
 
             percentage = attackSecond/float(seconds)
             print('Event occured %.2f%% into experiment'%(percentage)  )
@@ -212,7 +282,7 @@ def main():
 
         ## VERBOSE TO LET USER KNOW PERCENTAGE COMPLETE
         if( secondsPassed % 60 == 0 ):
-            execute( 4, 'sudo ls -la /storage/logs/audit/audit.log' )
+            execute( 4, 'sudo ls -la ' + auditfile )
             percentComplete = 100.0 * secondsPassed / float(seconds)
             print( 'Percent complete {0:d} / {1:d} = {2:3.2f}'.format(secondsPassed, seconds, percentComplete) )
 
@@ -238,7 +308,30 @@ def main():
     #---------------------------------#
     # Step 8: Save off log files and clean up volumes
     #---------------------------------#
-    saveExperiment( scenarioTime )
+    
+    #Creates a new experiment folder with the scenarioDate
+    #in the /storage/logs/experiment/ directory.
+    #Moves all auditd and system log files to this folder.
+    scenarioDate = fileutil.formatTime( scenarioTime )
+    
+    # Check to see if file is too big, if so, archive
+    # List all files in a directory using os.listdir
+    experimentpath = os.path.join(experimentDir, scenarioDate)
+    os.mkdir(experimentpath)
+
+    # Save the audit and system logs in the experiment folder
+    saveLogs( auditDir,  experimentpath, rename=True )
+    saveLogs( systemDir, experimentpath, rename=False )
+    
+    # Save the loaded rules used in the experiment folder
+    result = command_line.execute( 'sudo auditctl -l' )
+    rulesfilename = os.path.join(experimentpath, 'auditrules.txt')
+    output = OutStream(rulesfilename)
+    for line in result:
+        output.writeln(line)
+    del(output)
+    
+    # Now remove all docker volumes
     docker_volume.removeAll()
 
 
