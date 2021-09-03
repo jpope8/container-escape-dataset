@@ -268,6 +268,7 @@ def main():
     secondsPassed = 0
     interval = 1
     attackSecond = random.randint(1, seconds)
+    print( 'Attack at second ' + str(attackSecond) )
     while(secondsPassed < seconds):
         ## SIMULATE ATTACK, EXACTLY ONCE
         if( simulateEvent is True and secondsPassed >= attackSecond ):

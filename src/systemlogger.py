@@ -45,8 +45,9 @@ class SystemLogger:
         """
         # "Roll" the log file
         # Rename with different extension
-        base, ext = os.path.splitext(file)
-        os.rename(file, base + LOG)
+        if( os.path.exists(file) ):
+            base, ext = os.path.splitext(file)
+            os.rename(file, base + LOG)
 
     def log(self):
         #--------------------------------------------------------------------------#

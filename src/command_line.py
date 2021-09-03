@@ -5,6 +5,7 @@ Utility to execute command line processes.
 import subprocess
 import os
 import sys
+import re
   
 def execute( command ):
     """
@@ -42,7 +43,25 @@ def execute( command ):
       
     # splitting the output so that
     # we can parse them line by line
-    output = stdout_data.split("\n")
+    #print( 'COMMAND_LINE: ' + str( type(stdout_data) ) )
+    #output = stdout_data.split("\n")
+    # Issue: python2 stdout_data is a str (or str-like)
+    #        python3 stdout_data is bytes and cnnot be directly split
+    # Solution: convert to str using decode, check type instead of version check
+    # NB: If not done correctly the system logging fails and pollutes the audit log!!!
+    #     type=SYSCALL msg=audit(1630261099.364:78511): arch=40000003 syscall=295 success=no exit=-13
+    #         ... comm="python3" exe="/usr/bin/python3.7" subj==unconfined key="access"
+    #     type=CWD msg=audit(1630261099.364:78511): cwd="/home/pi/container-escape-dataset/src"
+    # 
+    #output = re.split('\n', str(stdout_data) )
+    output = None
+    #print( 'COMMAND_LINE: ' + str(type(stdout_data)) )
+    if( isinstance(stdout_data, str) ):
+        # this is python2 behaviour, stdout_data is str
+        output = stdout_data.split("\n")
+    else:
+        # this is python3 behaviour, stdout_data is bytes
+        output = re.split('\n', stdout_data.decode('utf-8') )
   
     # a variable to store the output
     result = []

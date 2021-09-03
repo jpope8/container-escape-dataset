@@ -84,8 +84,8 @@ def execute( recorder ):
     if( hasattr(psutil, 'getloadavg') ):
         result = psutil.getloadavg()  # also on Windows (emulated)
         log(recorder, 'getloadavg', result)
-    else:
-        print("getloadavg does not exist")
+    #else:
+    #    print("getloadavg does not exist")
 
 
     #==============================================#
