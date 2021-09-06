@@ -12,23 +12,21 @@ class ScenarioZ:
         """
         return self._name
 
-    def registerEvent(self):
-        """
-        Returns True if scenario requires event to be called, False otherwise.
-        """
-        return False
-
-    def init(self):
+    def init(self, scheduler, experimentSeconds, annotationFile):
         """
         Setup any resources for the scenario.
         Logging is not active.
         """
         # Start the container for unauthorized executing shell on host.
-        self._composeTemplate = '/home/pi/awesome-compose/apache-php/docker-compose.yaml'
+        # Presumes cwd is container-escape-dataset, uses relative path
+        self._composeTemplate = '../awesome-compose/apache-php/docker-compose.yaml'
 
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' build' )
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' up --no-start' )
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' start' )
+        
+        # We have no escape/attack events but need to "annotate" the experiment
+        annotationFile.annotate( self._name )
 
         print( 'Scenario ' + self.getName() + ': initialized' )
 

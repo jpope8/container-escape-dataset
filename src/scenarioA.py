@@ -1,9 +1,11 @@
 import command_line
+import random
 
 class ScenarioA:
 
     def __init__(self):
         self._name = 'A'
+        self._annotationFile = None # Set later in init
 
     def getName(self):
         """
@@ -11,19 +13,21 @@ class ScenarioA:
         """
         return self._name
 
-    def registerEvent(self):
-        """
-        Returns True if scenario requires event to be called, False otherwise.
-        """
-        return True
-
-    def init(self):
+    def init(self, scheduler, experimentSeconds, annotationFile):
         """
         Setup any resources for the scenario.
         Logging is not active.
         """
+        self._annotationFile = annotationFile
+        
         # Start the container for unauthorized executing shell on host.
         self.execute( 'docker run -d=true --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_shell_dos bash' )
+        
+        # Schedule the escape/attack
+        attackSecond = random.randint(1, experimentSeconds)
+        print( 'SCENARIO A: Schedule to attack at second ' + str(attackSecond) )
+        scheduler.enter( attackSecond, 1, self.onEvent )
+
 
     def start(self):
         """
@@ -37,6 +41,12 @@ class ScenarioA:
         commands to carry out an attack.
         """
         # Container Escape and Attack A (execute host shell from container)
+        # Order matters, need annotation to occur before the attack starts
+        self._annotationFile.annotate( self._name )
+        # starts attack, note that this initiates socket communication from
+        # the docker "client" to the docker server "dockerd", then connects to
+        # the containers and executes the shell.  So you will see about a 1/4 second
+        # delay from the annotation time to when the shell is executed.
         self.execute( 'docker exec -it ESCAPE_A /escape.sh' )
         print( 'Scenario ' + self._name + ': Attack started' )
 
