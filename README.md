@@ -91,23 +91,12 @@ Buena Suerte.
 
 ## Citing
 
-Regarding seam doppelganger, please cite the following.
+Regarding the framework and dataset, please cite the following.
 
-    @inproceedings{pope2020,
-      author = {Pope, James and Terwilliger, Mark and Connell, J.A. (Jim) and Talley, Gabriel and Blozik, Nicholas and Taylor, David},
-      title = {Annotating Documents Using Active Learning Methods for a Maintenance Analysis Application},
-      year = {2020},
-      isbn = {9781450375511},
-      publisher = {Association for Computing Machinery},
-      address = {New York, NY, USA},
-      url = {https://doi.org/10.1145/3430199.3430214},
-      doi = {10.1145/3430199.3430214},
-      booktitle = {Proceedings of the 2020 3rd International Conference on Artificial Intelligence and Pattern Recognition},
-      pages = {35–41},
-      numpages = {7},
-      keywords = {Active Learning, Document Classification},
-      location = {Xiamen, China},
-      series = {AIPR 2020}
+    @inproceedings{TBD,
+      author = {Pope, James},
+      title = {Dataset: Auditd data for Container Escape on Edge Devices},
+      year = {2021}
     }
 
 ## References
