@@ -1,13 +1,10 @@
 import command_line
 import random
 
-class ScenarioA:
-    """
-    ScenarioA
-    """
+class ScenarioPrivesc:
 
     def __init__(self):
-        self._name = 'A'
+        self._name = 'privesc'
         self._annotationFile = None # Set later in init
 
     def getName(self):
@@ -23,14 +20,18 @@ class ScenarioA:
         """
         self._annotationFile = annotationFile
         
-        # Start the container for unauthorized executing shell on host.
-        self.execute( 'docker run -d=true --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_shell_dos bash' )
+        # Start the container for unauthorized writing to host.
+
+        # Clean up any previous attacks
+        self.execute( 'sudo rm /etc/sudoers.d/010_testuser-nopasswd' )
+
+        # Start the container
+        self.execute( 'docker run -d=true --rm --name ESCAPE_B -v /:/privesc -it alpine_volume_privesc /bin/sh' )
         
         # Schedule the escape/attack
         attackSecond = random.randint(1, experimentSeconds)
-        print( 'SCENARIO A: Schedule to attack at second ' + str(attackSecond) )
+        print( 'SCENARIO B: Schedule to attack at second ' + str(attackSecond) )
         scheduler.enter( attackSecond, 1, self.onEvent )
-
 
     def start(self):
         """
@@ -43,14 +44,11 @@ class ScenarioA:
         Event occurred.  For example execute a series of
         commands to carry out an attack.
         """
-        # Container Escape and Attack A (execute host shell from container)
         # Order matters, need annotation to occur before the attack starts
-        self._annotationFile.annotate( self._name )
-        # starts attack, note that this initiates socket communication from
-        # the docker "client" to the docker server "dockerd", then connects to
-        # the containers and executes the shell.  So you will see about a 1/4 second
-        # delay from the annotation time to when the shell is executed.
-        self.execute( 'docker exec -it ESCAPE_A /escape.sh' )
+        self._annotationFile.annotateName( self._name )
+        # Container Escape and Attack B (modify files from container)
+        #self.execute( 'docker exec -it ESCAPE_B /privesc/escape.sh' )
+        self.execute( 'docker exec -it ESCAPE_B /escape.sh' )
         print( 'Scenario ' + self._name + ': Attack started' )
 
     def stop(self):
@@ -64,7 +62,7 @@ class ScenarioA:
         Tears down the scenario, for example, stop container.
         Logging is not active
         """
-        self.execute( 'docker stop ESCAPE_A' )
+        self.execute( 'sudo docker stop ESCAPE_B' )
 
     def execute( self, command ):
         """

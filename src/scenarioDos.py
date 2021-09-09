@@ -1,13 +1,13 @@
 import command_line
 import random
 
-class ScenarioA:
+class ScenarioDos:
     """
-    ScenarioA
+    ScenarioDos
     """
 
     def __init__(self):
-        self._name = 'A'
+        self._name = 'dos'
         self._annotationFile = None # Set later in init
 
     def getName(self):
@@ -28,7 +28,7 @@ class ScenarioA:
         
         # Schedule the escape/attack
         attackSecond = random.randint(1, experimentSeconds)
-        print( 'SCENARIO A: Schedule to attack at second ' + str(attackSecond) )
+        print( 'SCENARIO ' + self._name + ': Schedule to attack at second ' + str(attackSecond) )
         scheduler.enter( attackSecond, 1, self.onEvent )
 
 
@@ -45,7 +45,7 @@ class ScenarioA:
         """
         # Container Escape and Attack A (execute host shell from container)
         # Order matters, need annotation to occur before the attack starts
-        self._annotationFile.annotate( self._name )
+        self._annotationFile.annotateName( self._name )
         # starts attack, note that this initiates socket communication from
         # the docker "client" to the docker server "dockerd", then connects to
         # the containers and executes the shell.  So you will see about a 1/4 second

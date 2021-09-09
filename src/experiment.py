@@ -183,7 +183,7 @@ class Experiment:
         # Create the scheduler
         self._scheduler = Scheduler(time.time, time.sleep)
         # Create/open annotatio nfile
-        self._annotationFile = AnnotationFile( os.path.join( self._experimentDir , 'annotated.txt') )
+        self._annotationFile = AnnotationFile( os.path.join( self._experimentpath , 'annotated.txt') )
         # Initialize the scenario passing quite a bit of information
         self._scenario.init(self._scheduler, self._seconds, self._annotationFile) # logging not active
 
@@ -234,7 +234,7 @@ class Experiment:
         monitor_pid.exclude('systemlogger.py')
         monitor_pid.exclude('experiment.py')
 
-        # Now load the bulk of the rules
+        # Now load the bulk of the rules  '10-procmon.rules' -> True
         loadRule( rulesDir, '10-procmon.rules' )
         loadRule( rulesDir, '30-stig.rules' )
         loadRule( rulesDir, '31-privileged.rules' )
@@ -341,32 +341,38 @@ class Experiment:
         # Now remove all docker volumes
         docker_volume.removeAll()
 
+
 #
 # Test main function
 #
-from scenarioA import ScenarioA
-from scenarioB import ScenarioB
-from scenarioZ import ScenarioZ
+from scenarioDos import ScenarioDos
+from scenarioPrivesc import ScenarioPrivesc
+from scenarioGrafana import ScenarioGrafana
+from scenarioComposite import ScenarioComposite
 def main():
-    if( len(sys.argv) != 4 ):
-        print('  Usage: <time in minutes> <directory to place log files> <attack scenario "A" | "B" | "None">')
-        print('Example: 1 B')
+    
+    # Create the scenarios that can be chosen from
+    scenarios = { 'dos': ScenarioDos(),
+                  'privesc': ScenarioPrivesc(),
+                  'grafana': ScenarioGrafana(),
+                }
+    
+    if( len(sys.argv) != 5  ):
+        print('  Usage: <time in minutes> <directory to place log files> <scenario1> <scenario2>')
+        print('Scenarios: ' + str(scenarios.keys()) )
+        print('Example: 1 ../../logs grafana dos')
         return
 
-    seconds  = int(sys.argv[1]) * 60
-    logDir   = sys.argv[2]
-    scenarioName = sys.argv[3] # expect "A" or "B"
+    seconds     = int(sys.argv[1]) * 60
+    logDir      = sys.argv[2]
+    scenarioOne = sys.argv[3] # expect "A" or "B"
+    scenarioTwo = sys.argv[4]
     
-    #---------------------------------#
-    # Step 1: Initialize scenario.
-    #---------------------------------#
-    scenario = None
-    if( scenarioName == "A" ):
-        scenario = ScenarioA()
-    elif( scenarioName == "B" ):
-        scenario = ScenarioB()
-    else:
-        scenario = ScenarioZ()
+    
+    
+    scenario = ScenarioComposite()
+    scenario.add( scenarios[scenarioOne] )
+    scenario.add( scenarios[scenarioTwo] )
         
     #annotationFile = AnnotationFile( os.path.join( logDir , 'annotated.txt') )
     experiment = Experiment( seconds, logDir, scenario )

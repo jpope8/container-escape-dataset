@@ -3,7 +3,7 @@ Saves annotation to file in consistent format.
 """
 
 import time
-
+import json
 import fileutil
 from outstream import OutStream
 
@@ -18,17 +18,31 @@ class AnnotationFile:
         self._file = OutStream( filename, append=True)
         
     
-    def annotate(self, annotationKey):
+    def annotateName(self, annotationValue, key='annotationName'):
         """
-        Saves the annotationKey along with the time.
-        param: annotationKey str (usually scenario name)
+        Saves the annotationValue using key along with the time.
+        param: annotationName str, added to dict along with time, converted to json, then written
         """
-        scenarioTime = time.time()
-        scenarioDate = fileutil.formatTime( scenarioTime )
+        annotationsDictionary = dict()
+        
+        annotationsDictionary[key] = annotationValue
+        self.annotateDict(annotationsDictionary)
+        
+    def annotateDict(self, annotationsDictionary):
+        """
+        Saves the annotationDictionary along with the time.
+        param: annotationDictionary dict, add time, convert to json, then write to file
+        """
+        annotationTime = time.time()
+        annotationDate = fileutil.formatTime( annotationTime )
+        
+        annotationsDictionary['annotationTime'] = annotationTime
+        annotationsDictionary['annotationDate'] = annotationDate
         # Save annotation
         #annotationFile = OutStream( os.path.join( logDir , 'annotated.txt'), append=True)
-        self._file.writef( '%.3f:{"scenario":"%s", "date":"%s"},\n',
-                          scenarioTime, annotationKey, scenarioDate )
+        #self._file.writef( '%.3f:{"scenario":"%s", "date":"%s"},\n',
+        #                  scenarioTime, annotationKey, scenarioDate )
+        self._file.writeln( json.dumps(annotationsDictionary) + ',' )
     
 
     def close(self):
