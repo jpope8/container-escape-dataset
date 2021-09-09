@@ -15,7 +15,7 @@ class AnnotationFile:
     def __init__(self, filename):
         # open file once, perhaps better to reduce syscalls if a lot of annotating
         self._filename = filename
-        self._file = OutStream( filename, append=False)
+        self._file = OutStream( filename, append=True)
         
     
     def annotate(self, annotationKey):

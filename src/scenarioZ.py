@@ -19,9 +19,9 @@ class ScenarioZ:
         """
         # Start the container for unauthorized executing shell on host.
         # Presumes cwd is container-escape-dataset, uses relative path
-        self._composeTemplate = '../awesome-compose/apache-php/docker-compose.yaml'
+        self._composeTemplate = '../awesome-compose/prometheus-grafana/docker-compose.yml'
 
-        self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' build' )
+        #self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' build' )
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' up --no-start' )
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' start' )
         
