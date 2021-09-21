@@ -12,4 +12,4 @@ Each zip file contains 32 denial of service (dos) and 32 privilege escalation (p
 
 The prometheus and graphana containers are from the awesome-compose project.  The Internet of Things container was developed and communicates with 3 remote nRF endpoints.  The endpoints are taking temperature sensor readings once every three seconds and sending to the iot container over UDP.
 
-The naming of the zip files encapsulates the edge device and number of experiments contained.
+The naming of the zip files encapsulates the edge device and number of experiments contained.  The naming also includes which environment the experiments were conducted (there are two setups, so either environment 1 or 2).
