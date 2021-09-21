@@ -1,6 +1,7 @@
 import command_line
 import random
 
+
 class ScenarioDos:
     """
     ScenarioDos
@@ -22,10 +23,10 @@ class ScenarioDos:
         Logging is not active.
         """
         self._annotationFile = annotationFile
-        
+
         # Start the container for unauthorized executing shell on host.
         self.execute( 'docker run -d=true --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_shell_dos bash' )
-        
+
         # Schedule the escape/attack
         attackSecond = random.randint(1, experimentSeconds)
         print( 'SCENARIO ' + self._name + ': Schedule to attack at second ' + str(attackSecond) )
