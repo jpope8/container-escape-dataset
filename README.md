@@ -158,7 +158,11 @@ pi@raspberry:~ $
 ```
 ### Writing your own scenario
 
-It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioDos.py), [3](./src/scenarioProvesc.py).
+The following image shows the life cycle of a scenario being run with the framework.
+
+![Scenario Life Cycle](docs/images/framework.png)
+
+It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](src/scenarioGrafana.py), [2](src/scenarioDos.py), [3](src/scenarioProvesc.py).
 
 ```python
 class ScenarioExample:
@@ -188,6 +192,27 @@ class ScenarioExample:
         Tears down the scenario, for example, stop container.
         Logging is not active
         """
+```
+
+Once implemented, the scenario can be passed to the experiment to run the single scenario.  Experiments can also be run with multiple scenarios using the ScenarioComposite.  The following example shows the ScenarioExample being run with other scenarios using ScenarioComposite.
+
+```python
+#
+# Example main function
+#
+from scenarioExample import ScenarioExample
+from scenarioGrafana import ScenarioGrafana
+from scenarioComposite import ScenarioComposite
+def main():
+    seconds     = 15*60 # run for 15 minutes
+    logDir      = '../../logs'
+    scenarios = ScenarioComposite()
+    scenarios.add( ScenarioGrafana() )
+    scenarios.add( ScenarioExample() )
+    experiment = Experiment( seconds, logDir, scenarios )
+    experiment.run()
+if __name__ == '__main__':
+    main()
 ```
 
 
