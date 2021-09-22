@@ -242,8 +242,8 @@ Regarding the framework and dataset, please cite the following (the paper has be
     }
 
 ## References
-> - [1] SYNERGIA - Secure bY desigN End to end platfoRm for larGe scale resource constrained Iot Applications. (last retrieved September 2021) [InnovateUK](https://gtr.ukri.org/projects?ref=53707).
-
+> - [1] This work was supported by UK Research and Innovation, Innovate
+UK [grant number 53707].  SYNERGIA - Secure bY desigN End to end platfoRm for larGe scale resource constrained Iot Applications. [InnovateUK](https://gtr.ukri.org/projects?ref=53707) (last retrieved September 2021).
 
 ## License
 
