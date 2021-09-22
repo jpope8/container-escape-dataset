@@ -29,7 +29,6 @@
 
 </div>
 
-# UNDER CONSTRUCTION
 
 ## Contents
 
@@ -72,7 +71,7 @@ apt install auditd
 ### Install python3
 Likely already installed.  Check, if not, install.
 ```bash
-python --version (should be 3.5 or later)
+python --version (should be 3.7 or later)
 apt install python3
 ```
 
@@ -90,8 +89,6 @@ https://docs.docker.com/engine/install/ubuntu/
 Also setup docker to run without sudo.
 
 https://docs.docker.com/engine/install/linux-postinstall/
-
-A common networking problem can occur when running a docker container in a virtual machine.  The host can access the network (via NAT) but any container network access fails.  Specifically, running 'apt-get update' fails with 'Could not resolve 'archive.ubuntu.com'.
 
 
 ### Install Docker-Compose
