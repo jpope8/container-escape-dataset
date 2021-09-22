@@ -81,11 +81,11 @@ pip3 install psutil
 ### Install Docker
 Install Docker using the standard Linux instructions.
 
-[https://docs.docker.com/engine/install/ubuntu/]
+https://docs.docker.com/engine/install/ubuntu/
 
 Also setup docker to run without sudo.
 
-[https://docs.docker.com/engine/install/linux-postinstall/]
+https://docs.docker.com/engine/install/linux-postinstall/
 
 A common networking problem can occur when running a docker container in a virtual machine.  The host can access the network (via NAT) but any container network access fails.  Specifically, running 'apt-get update' fails with 'Could not resolve 'archive.ubuntu.com'.
 
@@ -160,8 +160,7 @@ pi@raspberry:~ $
 
 The following image shows the life cycle of a scenario being run with the framework.
 
-[//]: # (![Scenario Life Cycle](docs/images/framework.png))
-<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="200"/>
+<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="400"/>
 
 It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioPrivesc.py), [3](./src/scenarioDos.py).
 
