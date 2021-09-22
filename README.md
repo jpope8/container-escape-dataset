@@ -78,7 +78,7 @@ pip3 install psutil
 ```
 
 
-### Docker Configuration
+### Install Docker
 Install Docker using the standard Linux instructions.
 
 [https://docs.docker.com/engine/install/ubuntu/]
@@ -90,44 +90,48 @@ Also setup docker to run without sudo.
 A common networking problem can occur when running a docker container in a virtual machine.  The host can access the network (via NAT) but any container network access fails.  Specifically, running 'apt-get update' fails with 'Could not resolve 'archive.ubuntu.com'.
 
 
-### Docker-Compose Configuration
+### Install Docker-Compose
 
 Docker compose was also installed using the standard instructions.
 
 [https://docs.docker.com/compose/install/]
 
-Then awesome-docker was checked out using git.
 
-[https://github.com/docker/awesome-compose]
+### Clone Awesome-Compose
 
+Clone awesome-docker with the following.
 
-### Install container-escape-dataset
+```bash
+git clone https://github.com/docker/awesome-compose.git
+```
 
-Checkout the code using a git client.
+### Clone container-escape-dataset
+
+Checkout the code using a git client.  Note that the directory structure includes awesome-docker/prometheus-grafana that is referenced by one of the framework's [scenario](./src/scenarioGrafana.py).  Other awesome-docker examples can be placed here and referenced similarly.
 
 ```bash
 git clone https://github.com/jpope8/container-escape-dataset.git
 ```
 
 ### Check Setup
-Once complete your home directory should look roughly as follows.  Note that the container-escape-dataset and awesome-compose directories should be at the same level (the experiments use a relative directory to find the awesome-compose examples).
+Once complete your home directory should look roughly as follows.
 
 ```bash
-pi@raspberry:~ $ pwd
-/home/pi
-pi@raspberry:~ $ ls
-awesome-compose
-Bookshelf
-container-escape-dataset
-Desktop
-Documents
-Downloads
-Music
-Pictures
-psutil
-Public
-Templates
-Videos
+pi@raspberry:~ $ ls -la ./container-escape-dataset/
+total 56
+drwxr-xr-x  9 pi pi 4096 Sep 22 08:47 .
+drwxr-xr-x 27 pi pi 4096 Sep 22 08:42 ..
+drwxr-xr-x  3 pi pi 4096 Sep 22 08:39 awesome-compose
+drwxr-xr-x  2 pi pi 4096 Sep 22 08:47 data
+drwxr-xr-x  3 pi pi 4096 Aug 29 16:33 docs
+drwxr-xr-x  8 pi pi 4096 Sep 22 08:48 .git
+-rw-r--r--  1 pi pi 1151 Sep 22 08:47 .gitattributes
+-rw-r--r--  1 pi pi  654 Sep  9 14:43 .gitignore
+drwxr-xr-x  2 pi pi 4096 Sep  9 14:43 images
+-rw-r--r--  1 pi pi 1067 Aug 27 13:36 LICENSE
+-rw-r--r--  1 pi pi 5905 Sep 22 08:47 README.md
+drwxr-xr-x  2 pi pi 4096 Sep 16 12:18 rules
+drwxr-xr-x  3 pi pi 4096 Sep 22 08:47 src
 ```
 
 
@@ -150,7 +154,40 @@ total 17164
  2736 -rw-r----- 1 root adm  2797216 Sep 16 12:42 2021-09-16T124223_audit.log
     4 -rw-r--r-- 1 pi   pi       212 Sep 16 12:35 annotated.txt
     4 -rw-r--r-- 1 pi   pi      3340 Sep 16 12:42 auditrules.txt
-pi@raspberry:~ $ 
+pi@raspberry:~ $
+```
+### Writing your own scenario
+
+It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioDos.py), [3](./src/scenarioProvesc.py).
+
+```python
+class ScenarioExample:
+    ...
+    def getName(self):
+        """
+        Gets the name of the scenario.
+        returns str
+        """
+    def init(self, scheduler, experimentSeconds, annotationFile):
+        """
+        Setup any resources for the scenario.
+        Logging is not active.
+        """
+    def start(self):
+        """
+        May be called multiple times during experiment.
+        Logging is active.
+        """
+    def stop(self):
+        """
+        May be called multiple times during experiment.
+        Logging is active.
+        """
+    def destroy(self):
+        """
+        Tears down the scenario, for example, stop container.
+        Logging is not active
+        """
 ```
 
 
