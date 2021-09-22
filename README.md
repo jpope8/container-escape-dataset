@@ -6,7 +6,7 @@
 </h1>
 
 <div align="center">
-  Auditd Dataset for Container Escape.
+  Container Escape Detection for Edge Devices.
   <br />
   <a href="#basic-usage"><strong>Usage</strong></a> | <a href="#citing"><strong>Citing</strong></a>
   <br />
