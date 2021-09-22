@@ -160,9 +160,9 @@ pi@raspberry:~ $
 
 The following image shows the life cycle of a scenario being run with the framework.
 
-<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="600"/>
+<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="500"/>
 
-It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioPrivesc.py), [3](./src/scenarioDos.py).
+It is relatively straight forward to implement a custom scenario.  Create a new python file (e.g. scenarioExample.py) and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioPrivesc.py), [3](./src/scenarioDos.py).
 
 ```python
 class ScenarioExample:
@@ -196,7 +196,7 @@ class ScenarioExample:
 
 ### Running your own scenario(s)
 
-Once implemented, the scenario can be passed to the experiment to run the single scenario.  Experiments can also be run with multiple scenarios using the ScenarioComposite.  The following example shows the ScenarioExample being run with other scenarios.
+Once implemented, the scenario can be passed to the experiment to run the single scenario.  Experiments can also be run with multiple scenarios using the ScenarioComposite.  The following example.py shows the code to run multple scenarios.
 
 ```python
 #
@@ -216,6 +216,12 @@ def main():
     experiment.run()
 if __name__ == '__main__':
     main()
+```
+Open a terminal, change to the src directory, and run the experiment.
+
+```bash
+$ cd container-escape-dataset/src/
+$ python3 experiment.py
 ```
 
 
