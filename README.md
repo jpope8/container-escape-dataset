@@ -34,8 +34,7 @@
 ## Contents
 
 - [Introduction](#introduction)
-- [Installation](#installation)
-- [Dependencies](#dependencies)
+- [Instructions](#instructions)
 - [Generating](#Generating)
 - [Citing](#citing)
 - [License](#license)
@@ -45,13 +44,18 @@
 
 
 ## Introduction
-Dataset from Linux Raspian VMs and devices with auditd logs capturing various container escape and attacks.
+This repository provides the following.
 
+* Auditd datasets from edge devices with container escape scenarios
+* Installation and instructions for generating new container escape datasets using a framework
 
+The datasets can be downloaded [here](data).  The datasets are captured from both the [Umbrella](https://www.umbrellaiot.com/what-is-umbrella/umbrella-node/) edge device and a Linux Raspian VM.
 
-## Installation
+To generate new container escape datasets continue with the below instructions.  Note that generating new datasets is restricted to using a Linux Raspian VM.
 
-These installation instructions apply to creating the virtual machine to act as the edge device to generate new datasets.  It is assumed that users are familiar with virtual machine technology (we have successfully used both Oracle Virtual Box and VMware Fusion).
+## Instructions
+
+These installation instructions apply to creating a Linux Raspian virtual machine to act as the edge device to generate new datasets.  It is assumed that users are familiar with virtual machine technology (we have successfully used both Oracle Virtual Box and VMware Fusion).
 
 Create a new virtual machine from a Raspian Buster iso image.  We used the 2021-01-11-raspios-buster-i386.iso image, though the instructions should also work for other Linux distributions.
 
@@ -92,18 +96,10 @@ A common networking problem can occur when running a docker container in a virtu
 
 ### Install Docker-Compose
 
-Docker compose was also installed using the standard instructions.
+Install docker-compose using the standard instructions.
 
 https://docs.docker.com/compose/install/
 
-
-### Clone Awesome-Compose
-
-Clone awesome-docker with the following.
-
-```bash
-git clone https://github.com/docker/awesome-compose.git
-```
 
 ### Clone container-escape-dataset
 
@@ -117,7 +113,7 @@ git clone https://github.com/jpope8/container-escape-dataset.git
 Once complete your home directory should look roughly as follows.
 
 ```bash
-pi@raspberry:~ $ ls -la ./container-escape-dataset/
+$ ls -la ./container-escape-dataset/
 total 56
 drwxr-xr-x  9 pi pi 4096 Sep 22 08:47 .
 drwxr-xr-x 27 pi pi 4096 Sep 22 08:42 ..
@@ -140,21 +136,21 @@ drwxr-xr-x  3 pi pi 4096 Sep 22 08:47 src
 Change to the container-escape-dataset src directory and run the following command.  This will start a 1 minute experiment.  The graphana argument starts a graphana container and a prometheus container.  The dos argument starts a container that will randomly launch a denial of service attack during the experiment and write the time of the attack to the annotation file.
 
 ```bash
-mkdir logs
-cd ./container-escape-dataset/src
-python experiment 1 ../../logs grafana dos
+$ mkdir logs
+$ cd ./container-escape-dataset/src
+$ python experiment 1 ../../logs grafana dos
 ```
 
 When the experiment completes, check the logs/experiments directory for the results of the experiment.  Example output should look as follows.
 
 ```bash
-pi@raspberry:~ $ ls -ls ./logs/experiment/2021-09-16T122719/
+$ ls -ls ./logs/experiment/2021-09-16T122719/
 total 17164
 14420 -rw-r--r-- 1 pi   pi  14763097 Sep 16 12:42 2021-09-16T112722_system.log
  2736 -rw-r----- 1 root adm  2797216 Sep 16 12:42 2021-09-16T124223_audit.log
     4 -rw-r--r-- 1 pi   pi       212 Sep 16 12:35 annotated.txt
     4 -rw-r--r-- 1 pi   pi      3340 Sep 16 12:42 auditrules.txt
-pi@raspberry:~ $
+$
 ```
 ### Writing your own scenario
 
