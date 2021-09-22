@@ -127,10 +127,20 @@ drwxr-xr-x  2 pi pi 4096 Sep 16 12:18 rules
 drwxr-xr-x  3 pi pi 4096 Sep 22 08:47 src
 ```
 
+### Load the Escape Containers
+
+Load both the denial of service and the privilege escape containers.
+
+```bash
+$ cd ./containers
+$ docker load < umbrella_ubuntu_dos.tar.gz
+$ docker load < umbrella_alpine_privesc.tar.gz
+```
+See [Containers](containers/README.md) for more information on how the containers were initially created.
 
 ## Generating
 
-Change to the container-escape-dataset src directory and run the following command.  This will start a 1 minute experiment.  The graphana argument starts a graphana container and a prometheus container.  The dos argument starts a container that will randomly launch a denial of service attack during the experiment and write the time of the attack to the annotation file.
+Change to the container-escape-dataset src directory and run the following command.  This will start a 1 minute experiment.  The grafana argument starts a grafana container and a prometheus container.  The dos argument starts a container that will randomly launch a denial of service attack during the experiment and write the time of the attack to the annotation file.
 
 ```bash
 $ mkdir logs
