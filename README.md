@@ -160,9 +160,10 @@ pi@raspberry:~ $
 
 The following image shows the life cycle of a scenario being run with the framework.
 
-![Scenario Life Cycle](docs/images/framework.png)
+[//]: # (![Scenario Life Cycle](docs/images/framework.png))
+<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="200"/>
 
-It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](src/scenarioGrafana.py), [2](src/scenarioDos.py), [3](src/scenarioProvesc.py).
+It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioPrivesc.py), [3](./src/scenarioDos.py).
 
 ```python
 class ScenarioExample:
