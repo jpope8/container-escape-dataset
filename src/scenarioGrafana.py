@@ -19,12 +19,12 @@ class ScenarioGrafana:
         """
         # Start the container for unauthorized executing shell on host.
         # Presumes cwd is container-escape-dataset, uses relative path
-        self._composeTemplate = '../awesome-compose/prometheus-grafana/docker-compose.yml'
+        self._composeTemplate = '../containers/prometheus-grafana/docker-compose.yml'
 
         #self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' build' )
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' up --no-start' )
         self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' start' )
-        
+
         # We have no escape/attack events but need to "annotate" the experiment
         annotationFile.annotateName( self._name )
 

@@ -60,7 +60,7 @@ Create a new virtual machine from a Raspian Buster iso image.  We used the 2021-
 
 https://downloads.raspberrypi.org/rpd_x86/images/rpd_x86-2021-01-12/2021-01-11-raspios-buster-i386.iso
 
-Once the VM is running and logged in, the following software will need to be installed/configured.  Open a terminal.  This should be the /home/pi directory.  Unless noted otherwise, the remaining instructions assume this is the directory installation commands are executed from.
+Once the VM is running and logged in, the following software will need to be installed/configured.  The remaining instructions assume you are logged into the VM.  Open a terminal.  This should be the /home/pi directory.
 
 
 ### Install auditd
@@ -100,7 +100,7 @@ https://docs.docker.com/compose/install/
 
 ### Clone container-escape-dataset
 
-Checkout the code using a git client.  Note that the directory structure includes awesome-docker/prometheus-grafana that is referenced by one of the framework's [scenario](./src/scenarioGrafana.py).  Other awesome-docker examples can be placed here and referenced similarly.
+Checkout the code using a git client.  Note that the directory structure includes containers/prometheus-grafana that is referenced by one of the framework's [scenario](./src/scenarioGrafana.py).  Other awesome-docker examples can be placed here and referenced similarly.
 
 ```bash
 git clone https://github.com/jpope8/container-escape-dataset.git
@@ -114,7 +114,6 @@ $ ls -la ./container-escape-dataset/
 total 56
 drwxr-xr-x  9 pi pi 4096 Sep 22 08:47 .
 drwxr-xr-x 27 pi pi 4096 Sep 22 08:42 ..
-drwxr-xr-x  3 pi pi 4096 Sep 22 08:39 awesome-compose
 drwxr-xr-x  2 pi pi 4096 Sep 22 08:47 data
 drwxr-xr-x  3 pi pi 4096 Aug 29 16:33 docs
 drwxr-xr-x  8 pi pi 4096 Sep 22 08:48 .git
