@@ -140,4 +140,10 @@ sudo docker-compose -f prometheus-grafana/docker-compose.yml rm -f
 
 ## Internet of Things Container
 
-Need to add.
+The IoT container used for the datasets is described here.  We do not provide the container because it exceeded github's maximum file size.
+
+The IoT container is based on the ubuntu image.  It was then configured to setup the tunslip interface to communicate with an IEEE 802.15.4 wireless dongle over /tty/ACM0.  The dongle is programmed with the contiki-ng rpl-border-router example using TSCH.
+
+The remote endpoints are nRF52480 boards programmed with the contiki-ng rpl-udp example using TSCH.  The endpoints take a temperature sensor reading every 3 seconds and send to the UDP server running in the Docker IoT container.
+
+This container setup works for both the Umbrella edge device (built-in dongle) and the Linux Raspian VM (USB attached dongle).
