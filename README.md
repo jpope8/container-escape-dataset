@@ -55,7 +55,7 @@ These installation instructions apply to creating the virtual machine to act as 
 
 Create a new virtual machine from a Raspian Buster iso image.  We used the 2021-01-11-raspios-buster-i386.iso image, though the instructions should also work for other Linux distributions.
 
-[https://downloads.raspberrypi.org/rpd_x86/images/rpd_x86-2021-01-12/2021-01-11-raspios-buster-i386.iso]
+https://downloads.raspberrypi.org/rpd_x86/images/rpd_x86-2021-01-12/2021-01-11-raspios-buster-i386.iso
 
 Once the VM is running and logged in, the following software will need to be installed/configured.  Open a terminal.  This should be the /home/pi directory.  Unless noted otherwise, the remaining instructions assume this is the directory installation commands are executed from.
 
@@ -94,7 +94,7 @@ A common networking problem can occur when running a docker container in a virtu
 
 Docker compose was also installed using the standard instructions.
 
-[https://docs.docker.com/compose/install/]
+https://docs.docker.com/compose/install/
 
 
 ### Clone Awesome-Compose
@@ -160,7 +160,7 @@ pi@raspberry:~ $
 
 The following image shows the life cycle of a scenario being run with the framework.
 
-<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="400"/>
+<img src="docs/images/framework.png" alt="Scenario Life Cycle" width="600"/>
 
 It is relatively straight forward to implement a custom scenario.  Create a new python file and implement the following methods.  Only the getName method requires an implementation, the remaining method implementation depends on the user's requirements.  Several examples are provided [1](./src/scenarioGrafana.py), [2](./src/scenarioPrivesc.py), [3](./src/scenarioDos.py).
 
@@ -194,7 +194,9 @@ class ScenarioExample:
         """
 ```
 
-Once implemented, the scenario can be passed to the experiment to run the single scenario.  Experiments can also be run with multiple scenarios using the ScenarioComposite.  The following example shows the ScenarioExample being run with other scenarios using ScenarioComposite.
+### Running your own scenario(s)
+
+Once implemented, the scenario can be passed to the experiment to run the single scenario.  Experiments can also be run with multiple scenarios using the ScenarioComposite.  The following example shows the ScenarioExample being run with other scenarios.
 
 ```python
 #
@@ -203,6 +205,7 @@ Once implemented, the scenario can be passed to the experiment to run the single
 from scenarioExample import ScenarioExample
 from scenarioGrafana import ScenarioGrafana
 from scenarioComposite import ScenarioComposite
+from experiment import Experiment
 def main():
     seconds     = 15*60 # run for 15 minutes
     logDir      = '../../logs'
