@@ -11,4 +11,5 @@
 ## JHP for some reason b32 does not like accept, causes error for augenrules
 #-a always,exit -F arch=b32 -S socket,connect,shutdown,bind,listen,socketpair,setsockopt -F key=network-access
 -a always,exit -F arch=b32 -S socket,connect,shutdown,bind,listen,socketpair,setsockopt,sendto,recvfrom -F key=network-access
+-a always,exit -F arch=b64 -S socket,connect,shutdown,bind,listen,socketpair,setsockopt,sendto,recvfrom -F key=network-access
 #-a always,exit -F arch=b64 -S socket,connect,accept,shutdown,bind,listen,socketpair,setsockopt -F key=network-access
