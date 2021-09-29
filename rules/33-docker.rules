@@ -7,7 +7,7 @@
 ## DEBUGGING REMOVE UNLESS TOLD OTHERWISE
 ## /var/run/containerd/containerd.sock    sudo find / -name 'containerd' -print
 -a always,exit -F arch=b32 -S sendmsg,recvmsg -k socket-file
-#-a always,exit -F arch=b64 -S sendmsg,recvmsg -k socket-file
+-a always,exit -F arch=b64 -S sendmsg,recvmsg -k socket-file
 
 ## Monitor docker executables
 ## NB: augenrules converts the '-k foo' into '-F key=foo'
@@ -31,3 +31,4 @@
 
 ## Added SYNERGIA, hopefully earlier rule captures but just in case
 -a always,exit -F arch=b32 -S mkdir,mkdirat -F key=mkdir
+-a always,exit -F arch=b64 -S mkdir,mkdirat -F key=mkdir

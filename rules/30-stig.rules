@@ -30,8 +30,10 @@
 ##
 ## Things that could affect time
 -a always,exit -F arch=b32 -S adjtimex,settimeofday,stime -F key=time-change
+-a always,exit -F arch=b64 -S adjtimex,settimeofday,stime -F key=time-change
 
 -a always,exit -F arch=b32 -S clock_settime -F a0=0x0 -F key=time-change
+-a always,exit -F arch=b64 -S clock_settime -F a0=0x0 -F key=time-change
 
 # Introduced in 2.6.39, commented out because it can make false positives
 #-a always,exit -F arch=b32 -S clock_adjtime -F key=time-change
@@ -47,6 +49,7 @@
 
 ## Things that could affect system locale
 -a always,exit -F arch=b32 -S sethostname,setdomainname -F key=system-locale
+-a always,exit -F arch=b64 -S sethostname,setdomainname -F key=system-locale
 
 -w /etc/issue -p wa -k system-locale
 -w /etc/issue.net -p wa -k system-locale
@@ -101,10 +104,18 @@
 -a always,exit -F arch=b32 -S lchown,fchown,chown,fchownat -F key=perm_mod
 -a always,exit -F arch=b32 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -F key=perm_mod
 
+-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F key=perm_mod
+-a always,exit -F arch=b64 -S lchown,fchown,chown,fchownat -F key=perm_mod
+-a always,exit -F arch=b64 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -F key=perm_mod
+
+
+
 ##- Unauthorized access attempts to files (unsuccessful)
 -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -F key=access
 -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -F key=access
 
+-a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -F key=access
+-a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -F key=access
 ##- Use of print command (unsuccessful and successful)
 
 ##- Export to media (successful)
@@ -112,6 +123,7 @@
 ## so that its done manually in order to get the correct user requesting the
 ## export
 -a always,exit -F arch=b32 -S mount,umount2 -F key=export
+-a always,exit -F arch=b64 -S mount,umount2 -F key=export
 
 ##- System startup and shutdown (unsuccessful and successful)
 
