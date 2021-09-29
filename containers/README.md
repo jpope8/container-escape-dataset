@@ -95,7 +95,7 @@ sh -c "echo \$\$ > /tmp/cgrp/x/cgroup.procs"
 
 ### Attack
 
-The contents of the stress.txt file should be as follows.
+The contents of the stress.txt file should be as follows.  The final line indicates to consume 2 processors for 20 seconds.
 
 ```bash
 #!/bin/bash
