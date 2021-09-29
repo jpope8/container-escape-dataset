@@ -71,7 +71,7 @@ From a host terminal, start the ubuntu_escape container with reduced security.
 docker run --name=ESCAPE_DOS --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_escape bash
 ```
 
-Finally, from other host terminal, execute escape.sh in ubuntu_escape.  This launches the attack (you can use top to see the increased CPU usage).  Note that [scenarioDos.py](./src/scenarioDos.py) uses this to launch the attack.
+Finally, from other host terminal, execute escape.sh in ubuntu_escape.  This launches the attack (you can use top to see the increased CPU usage).  Note that [scenarioDos.py](../src/scenarioDos.py) uses this to launch the attack.
 ```bash
 docker exec -it ESCAPE_DOS /escape.sh
 ```
@@ -155,7 +155,7 @@ docker run --name ESCAPE_PRIVESC -v /:/privesc -it priv-container /bin/sh
 
 ### Attack
 
-The attack assumes a user testuer aleady exists that has password requires sudo privilege (the attack changes this to password-less).  From within the container, the following is executed.
+The attack assumes the user *testuser* aleady exists.  The *testuser* should be in the sudo'ers list but requires a password (the attack changes this to password-less).  From within the container, the following is executed.
 
 ```bash
 echo "testuser ALL=(ALL) NOPASSWD: ALL" > /privesc/etc/sudoers.d/010_testuser-nopasswd
