@@ -233,12 +233,22 @@ Buena Suerte.
 
 ## Citing
 
-Regarding the framework and dataset, please cite the following (the paper has been submitted and is under review, acceptance pending).
+Regarding the framework and dataset, please cite the following.  Note that the paper has been accepted but not yet published.
 
-    @inproceedings{TBD,
-      author = {Pope, James},
-      title = {Dataset: Auditd data for Container Escape on Edge Devices},
-      year = {2021}
+    @inproceedings{10.1145/3485730.3494114,
+        author = {James Pope, Francesco Raimondo, Vijay Kumar, Ryan McConville, Rob Piechocki, George Oikonomou, Thomas Pasquier, Bo Luo, Dan Howarth, Ioannis Mavromatis , Pietro Carnelli, Adrian Sanchez-Mompo, Theodoros Spyridopoulos, and Aftab Khan},
+        title = {Dataset: Container Escape Detection for Edge Devices},
+        year = {2021},
+        isbn = {978-1-4503-9097-2/21/11},
+        publisher = {Association for Computing Machinery},
+        address = {New York, NY, USA},
+        url = {https://doi.org/10.1145/3485730.3494114},
+        doi = {10.1145/3485730.3494114},
+        booktitle = {SenSys '21: The 19th ACM Conference on Embedded Networked Sensor Systems Proceedings},
+        numpages = {5},
+        keywords = {Datasets, Container Escape, Anomaly Detection, Cybersecurity},
+        location = {Coimbra, Portugal},
+        series = {SenSys 2021}
     }
 
 ## References
