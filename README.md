@@ -235,8 +235,8 @@ Buena Suerte.
 
 Regarding the framework and dataset, please cite the following.  Note that the paper has been accepted but not yet published.
 
-    @inproceedings{10.1145/3485730.3494114,
-        author = {James Pope, Francesco Raimondo, Vijay Kumar, Ryan McConville, Rob Piechocki, George Oikonomou, Thomas Pasquier, Bo Luo, Dan Howarth, Ioannis Mavromatis , Pietro Carnelli, Adrian Sanchez-Mompo, Theodoros Spyridopoulos, and Aftab Khan},
+        @inproceedings{DATA2021,
+        author = {James Pope and Francesco Raimondo and Vijay Kumar and Ryan McConville and Rob Piechocki and George Oikonomou and Thomas Pasquier and Bo Luo and Dan Howarth and Ioannis Mavromatis and Pietro Carnelli and Adrian Sanchez-Mompo and Theodoros Spyridopoulos and Aftab Khan},
         title = {Dataset: Container Escape Detection for Edge Devices},
         year = {2021},
         isbn = {978-1-4503-9097-2/21/11},
