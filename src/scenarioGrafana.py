@@ -22,8 +22,8 @@ class ScenarioGrafana:
         self._composeTemplate = '../containers/prometheus-grafana/docker-compose.yml'
 
         #self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' build' )
-        self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' up --no-start' )
-        self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' start' )
+        self.execute( 'sudo docker compose -f ' + self._composeTemplate +  ' up --no-start' )
+        self.execute( 'sudo docker compose -f ' + self._composeTemplate +  ' start' )
 
         # We have no escape/attack events but need to "annotate" the experiment
         annotationFile.annotateName( self._name )
@@ -53,8 +53,8 @@ class ScenarioGrafana:
         Tears down the scenario, for example, stop container.
         Logging is not active
         """
-        self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' stop' )
-        self.execute( 'sudo docker-compose -f ' + self._composeTemplate +  ' rm -f' )
+        self.execute( 'sudo docker compose -f ' + self._composeTemplate +  ' stop' )
+        self.execute( 'sudo docker compose -f ' + self._composeTemplate +  ' rm -f' )
 
     def execute( self, command ):
         """
