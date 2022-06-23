@@ -25,7 +25,7 @@ class ScenarioDos:
         self._annotationFile = annotationFile
 
         # Start the container for unauthorized executing shell on host.
-        self.execute( 'docker run -d=true --name=ESCAPE_A --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_shell_dos bash' )
+        self.execute( 'docker run -d=true --name=ESCAPE_DOS --rm -it --cap-add=SYS_ADMIN --security-opt apparmor=unconfined ubuntu_escape bash' )
 
         # Schedule the escape/attack
         attackSecond = random.randint(1, experimentSeconds)
@@ -51,7 +51,7 @@ class ScenarioDos:
         # the docker "client" to the docker server "dockerd", then connects to
         # the containers and executes the shell.  So you will see about a 1/4 second
         # delay from the annotation time to when the shell is executed.
-        self.execute( 'docker exec -it ESCAPE_A /escape.sh' )
+        self.execute( 'docker exec -it ESCAPE_DOS /escape.sh' )
         print( 'Scenario ' + self._name + ': Attack started' )
 
     def stop(self):
@@ -65,7 +65,7 @@ class ScenarioDos:
         Tears down the scenario, for example, stop container.
         Logging is not active
         """
-        self.execute( 'docker stop ESCAPE_A' )
+        self.execute( 'docker stop ESCAPE_DOS' )
 
     def execute( self, command ):
         """

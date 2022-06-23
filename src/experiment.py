@@ -157,11 +157,11 @@ class Experiment:
         if( not path.exists(self._auditDir) ):
             os.mkdir(self._auditDir)
         if( not path.exists(self._systemDir) ):
-            # os.mkdir(self._systemDir)
-            command_line.execute( 'sudo mkdir ' + self._systemDir )
+            os.mkdir(self._systemDir)
+            #command_line.execute( 'sudo mkdir ' + self._systemDir )
         if( not path.exists(self._experimentDir) ):
-            # os.mkdir(self._experimentDir)
-            command_line.execute( 'sudo mkdir ' + self._experimentDir)
+            os.mkdir(self._experimentDir)
+            #command_line.execute( 'sudo mkdir ' + self._experimentDir)
         
     def run(self):
         """
@@ -180,8 +180,8 @@ class Experiment:
         # List all files in a directory using os.listdir
         self._experimentpath = os.path.join(self._experimentDir, scenarioDate)
         # Should not exist, we keep one second granularity
-        # os.mkdir(self._experimentpath)
-        command_line.execute( 'sudo mkdir ' + self._experimentpath)
+        os.mkdir(self._experimentpath)
+        #command_line.execute( 'sudo mkdir ' + self._experimentpath)
         
         # Create the scheduler
         self._scheduler = Scheduler(time.time, time.sleep)
