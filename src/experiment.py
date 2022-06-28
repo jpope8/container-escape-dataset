@@ -104,7 +104,7 @@ def configAudit(rulesDir, auditDir):
     #infile = InStream('../')
     
     # First check if we have copied original audit.conf as a backup
-    if( not path.exists('/etc/audit/audit.backup') ):
+    if( not path.exists('/etc/audit/auditd.backup') ):
         execute( 2, 'sudo cp /etc/audit/auditd.conf /etc/audit/auditd.backup' )
     # Now copy our audit.conf to the etc directory to be used by auditd service
     templateFilename  = os.path.join(rulesDir, 'auditd.conf.template')
