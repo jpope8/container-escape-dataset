@@ -181,7 +181,6 @@ class Experiment:
         self._experimentpath = os.path.join(self._experimentDir, scenarioDate)
         # Should not exist, we keep one second granularity
         os.mkdir(self._experimentpath)
-        #command_line.execute( 'sudo mkdir ' + self._experimentpath)
         
         # Create the scheduler
         self._scheduler = Scheduler(time.time, time.sleep)

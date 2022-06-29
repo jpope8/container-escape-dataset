@@ -131,7 +131,6 @@ class Experiment:
         self._logDir  = logDir
         self._scenario= scenario
         
-        self._auditDir      = os.path.join(logDir, 'audit')
         self._systemDir     = os.path.join(logDir, 'system')
         self._experimentDir = os.path.join(logDir, 'experiment')
         
@@ -154,21 +153,13 @@ class Experiment:
         if( not path.exists(self._logDir) ):
             e = 'Specified log directory does not exist, please create first: ' + self._logDir
             raise(e)
-        if( not path.exists(self._auditDir) ):
-            os.mkdir(self._auditDir)
         if( not path.exists(self._systemDir) ):
             os.mkdir(self._systemDir)
-            #command_line.execute( 'sudo mkdir ' + self._systemDir )
         if( not path.exists(self._experimentDir) ):
             os.mkdir(self._experimentDir)
-            #command_line.execute( 'sudo mkdir ' + self._experimentDir)
-        
+
+
     def run(self):
-        """
-        Executes the first several steps to start the experiment, then simluates any events
-        scheduled by the scenarios, and when the experiment time has elapsed, stops the
-        experiment and saves the results to file.
-        """
         #---------------------------------#
         # Creates a new experiment folder with the scenarioDate
         # in the /storage/logs/experiment/ directory.
@@ -181,7 +172,6 @@ class Experiment:
         self._experimentpath = os.path.join(self._experimentDir, scenarioDate)
         # Should not exist, we keep one second granularity
         os.mkdir(self._experimentpath)
-        #command_line.execute( 'sudo mkdir ' + self._experimentpath)
         
         # Create the scheduler
         self._scheduler = Scheduler(time.time, time.sleep)
@@ -190,73 +180,26 @@ class Experiment:
         # Initialize the scenario passing quite a bit of information
         self._scenario.init(self._scheduler, self._seconds, self._annotationFile) # logging not active
 
-        #---------------------------------#
-        # Step 2: Load rules and start auditd logging.
-        # One approach to use /etc/audit/rules.d/*.rules and augnerules
-        # Another approach is to use auditctl -R *.rules
-        # We choose auditctl to avoid extra copy.
-        # NB: that the first rules file deletes any previous rules
-        #execute( 1, 'sudo augenrules --load' )
-        # Vital that rules are owned by root and writable by root only
-        # Otherwise auditctl -R fails silently and does not apply rules
-        # Perhaps use if to ensure requirements are met and only chown/chmod if not
-        #---------------------------------#
-        # Make sure ownnership and permissions are correct for rules files
-        # sudo chown root:root ../rules/*.rules
-        
-        rulesDir = os.path.abspath( '../rules/' )
-        for entry in os.listdir('../rules/'):
-            #if( os.path.isfile(filefolder) and filefolder.endswith('.rules') ):
-            rulesfile = os.path.join(rulesDir, entry)
-            if( os.path.isfile(rulesfile) and entry.endswith('.rules') ):
-                #print( 'File: ' + str(rulesfile) )
-                execute( 2, 'sudo chown root:root ' + rulesfile )
-                execute( 2, 'sudo chmod 644 ' + rulesfile )
-        #execute( 2, 'sudo chown root:root ' + rulesDir + '*.rules' )
-        #execute( 2, 'sudo chmod 644 ' + rulesDir + '*.rules' )
-        #execute( 2, 'sudo ls -la ' + rulesDir + '*.rules' )
-        #execute( 2, 'sudo ls -la ' + rulesDir )
-        
-        # Make sure the auditd.conf file is setup correctly, use our custom file
-        configAudit( rulesDir, self._auditDir )
-        
+        # Load rules and start falco logging
+        rulesDir = os.path.abspath( '../rules_falco' )
+        falcoDir = os.path.abspath(self._logDir)
+
         #---------------------------------#
         # Step 2: Start system logging
         #---------------------------------#
         self._systemLogger.start(daemon=True) # keeps from possibly hanging
-        
+
         #---------------------------------#
-        # Step 2: Start audit logging
+        # Step 2: Start falco logging
         #---------------------------------#
-        execute( 2, 'sudo service auditd start' )
-        
-        # Load the base config, this erases any previous rules
-        loadRule( rulesDir, '10-base-config.rules' )
+        execute(2, 'sudo falco -c ' + rulesDir + '/falco.yaml -r ' + rulesDir + '/trial_rules.yaml ' + '-d -P ../../falco_logs/falco.pid')
 
-        # Now try to exclude the instrumentation processes
-        monitor_pid.exclude('systemlogger.py')
-        monitor_pid.exclude('experiment.py')
+        # Ignoring the monitoring part just yet, not too sure how to do that
+        falcofile = os.path.join(self._experimentpath, 'events.txt')
+        execute(2, 'ls -la ' + falcofile)
 
-        # Now load the bulk of the rules  '10-procmon.rules' -> True
-        loadRule( rulesDir, '10-procmon.rules' )
-        loadRule( rulesDir, '30-stig.rules' )
-        loadRule( rulesDir, '31-privileged.rules' )
-        loadRule( rulesDir, '33-docker.rules' )
-        loadRule( rulesDir, '41-containers.rules' )
-        loadRule( rulesDir, '43-module-load.rules' )
-        loadRule( rulesDir, '71-networking.rules' )
-        loadRule( rulesDir, '99-finalize.rules' )
 
-        # After starting scenarios so we capture their docker processes
-        monitor_pid.monitor( 'docker-proxy' );
-
-        # Sanity check to see auditd logging is working
-        auditfile = os.path.join(self._auditDir, 'audit.log')
-        execute( 2, 'sudo ls -la ' + auditfile )
-        # Wait until end to save the audit rules used in the experiment
-
-        
-        #---------------------------------#
+         #---------------------------------#
         #Step 3: Start scenario
         #---------------------------------#
         self._scenario.start() # logging active
@@ -268,8 +211,8 @@ class Experiment:
         
         # Schedule event to stop the experiment
         self._scheduler.enter( self._seconds, 1, self._stopExperiment )
-        self._scheduler.enter( self._statusInterval, 5, self._status )
-        
+        # self._scheduler.enter( self._statusInterval, 5, self._status ) #don't think this is triggered anyway
+
         # Run main schedule loop to let scenarios respond to events.
         # The _stopExperiment is a non-scenario event that will ensure
         # all subsequent events are cancelled to this loop exits.
@@ -283,6 +226,7 @@ class Experiment:
             numevents = numevents + 1
         print('main exitting, num events ' + str(numevents) )
     
+
     def _status(self):
         currentTime = time.time()
         eventTimeElapsed = currentTime - self._previousTime
@@ -296,6 +240,7 @@ class Experiment:
         # Schedule next status update (may extend beyond experiment but will be canncelled)
         self._scheduler.enter( self._statusInterval, 5, self._status )
     
+
     def _stopExperiment(self):
         print('STOPPING EXPERIMENT' )
         # Removes eny remaining events from the scheduler
@@ -314,7 +259,10 @@ class Experiment:
         # Step 6: Stop the system and auditd logging.
         #---------------------------------#
         self._systemLogger.stop()
-        execute( 6, 'sudo service auditd stop' )
+        pid_path = os.path.join(self._logDir, 'falco.pid')
+        pid_file = open(pid_path, 'r')
+        pid = pid_file.readline()
+        execute(6, 'sudo kill ' + pid)
 
         #---------------------------------#
         #Step 7: Stop Scenario (ie stop containers)
@@ -330,7 +278,7 @@ class Experiment:
         
         # Moves all auditd and system log files to this folder.
         # Save the audit and system logs in the experiment folder
-        saveLogs( self._auditDir,  self._experimentpath, rename=True )
+        # saveLogs( self._auditDir,  self._experimentpath, rename=True )
         saveLogs( self._systemDir, self._experimentpath, rename=False )
         
         # Save the loaded rules used in the experiment folder
@@ -363,14 +311,13 @@ def main():
     if( len(sys.argv) != 5  ):
         print('  Usage: <time in minutes> <directory to place log files> <scenario1> <scenario2>')
         print('Scenarios: ' + str(scenarios.keys()) )
-        print('Example: 1 ../../logs grafana dos')
+        print('Example: 1 ../../falco_logs grafana dos')
         return
 
     seconds     = int(sys.argv[1]) * 60
     logDir      = sys.argv[2]
     scenarioOne = sys.argv[3] # expect "A" or "B"
     scenarioTwo = sys.argv[4]
-    
     
     
     scenario = ScenarioComposite()
@@ -383,3 +330,16 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# Think there are a few things I need to do to integrate falco here
+# 1. command to load the conf file, okay so when running on a new system, there is a need to have a copy of conf file and we can just run it starightaway, don't need to copy like auditd to some dir
+# 2. command to load the rules, that should be quite easy
+# 3. command to store the logs, this is a bit tricky, I am not too sure the structure, say annotated, how do I put it. System log I would say ignore from now
+# 4. think there are a few other files in the log, also the command line arguments need to change, probably modify them later on.
+# kinda need to read about stream first, no clue what it does.
+
+
+# a few more things that need to be fixed, events.txt need to be dynamically write to the experiment dir.
+# the permission is a bit off for some reason, might need to chmod it.
+# apart from that, its just loads of general questions remained.
