@@ -90,40 +90,28 @@ def saveLogs(logpath, experimentpath, rename=False):
             #print('    logfile ' + str(logfile) )
             #print('    newfile ' + str(newfile) )
             execute( 9, 'sudo mv ' + str(logfile) + ' ' + str(newfile) )
-
-
-def configAudit(rulesDir, auditDir):
-    """
-    Sets up the auditd.conf file and copies to /etc/audit.
-    Should be called before running 'sudo service auditd start'.
-    Note that the auditd logging directory is set to auditDir
-    (versus default of /var/logs/audit).
-    """
-    #infilename  = os.path.join(rulesDir, 'audit.temp')
-    #outfilename = os.path.join(rulesDir, 'audit.conf')
-    #infile = InStream('../')
     
-    # First check if we have copied original audit.conf as a backup
-    if( not path.exists('/etc/audit/audit.backup') ):
-        execute( 2, 'sudo cp /etc/audit/auditd.conf /etc/audit/auditd.backup' )
-    # Now copy our audit.conf to the etc directory to be used by auditd service
-    templateFilename  = os.path.join(rulesDir, 'auditd.conf.template')
-    auditconfFilename = os.path.join(rulesDir, 'auditd.conf') # NB git ignores
-    
-    templateFile  = InStream(templateFilename)
-    auditconfFile = OutStream(auditconfFilename)
-    while( templateFile.hasNextLine() ):
+
+def configFalco(rulesDir, falcoLog):
+    # Setting up the falco.conf file, mainly is about configuring it to write to
+    # the experiment folder.
+    templateFilename = os.path.join(rulesDir, 'falco.yaml.template')
+    falcoconfFilename = os.path.join(rulesDir, 'falco.yaml')
+
+    templateFile = InStream(templateFilename)
+    falcoconfFile = OutStream(falcoconfFilename)
+
+    while (templateFile.hasNextLine()):
         line = templateFile.readLine()
-        if( line.startswith('log_file = ') ):
-            auditfilepath = os.path.join(auditDir, 'audit.log')
-            # We need to auditd.conf reference to be absolute instead of relative
-            line = 'log_file = ' + os.path.abspath(auditfilepath)
-        auditconfFile.writeln( line )
+        if (line.startswith('  filename:')):
+            print("1")
+            print(falcoLog)
+            line = '  filename: ' + os.path.abspath(falcoLog)
+            print(line)
+        falcoconfFile.writeln(line)
     del(templateFile)
-    del(auditconfFile)
-    
-    execute( 2, 'sudo cp ' + auditconfFilename + ' /etc/audit/auditd.conf' )
-    
+    del(falcoconfFile)
+
 
 class Experiment:
     def __init__(self, seconds, logDir, scenario):
@@ -133,6 +121,8 @@ class Experiment:
         
         self._systemDir     = os.path.join(logDir, 'system')
         self._experimentDir = os.path.join(logDir, 'experiment')
+
+        self._falcoLog = None # where logs are stored
         
         self._annotationFile = None # Set later in start
         
@@ -172,7 +162,7 @@ class Experiment:
         self._experimentpath = os.path.join(self._experimentDir, scenarioDate)
         # Should not exist, we keep one second granularity
         os.mkdir(self._experimentpath)
-        
+
         # Create the scheduler
         self._scheduler = Scheduler(time.time, time.sleep)
         # Create/open annotatio nfile
@@ -182,7 +172,10 @@ class Experiment:
 
         # Load rules and start falco logging
         rulesDir = os.path.abspath( '../rules_falco' )
-        falcoDir = os.path.abspath(self._logDir)
+        self._falcoLog = os.path.join(self._experimentpath, 'events.txt')
+
+        # Configure the conf file so its write to the right dir
+        configFalco(rulesDir, self._falcoLog)
 
         #---------------------------------#
         # Step 2: Start system logging
@@ -195,8 +188,7 @@ class Experiment:
         execute(2, 'sudo falco -c ' + rulesDir + '/falco.yaml -r ' + rulesDir + '/trial_rules.yaml ' + '-d -P ../../falco_logs/falco.pid')
 
         # Ignoring the monitoring part just yet, not too sure how to do that
-        falcofile = os.path.join(self._experimentpath, 'events.txt')
-        execute(2, 'ls -la ' + falcofile)
+        execute(2, 'ls -la ' + self._falcoLog)
 
 
          #---------------------------------#
@@ -256,13 +248,16 @@ class Experiment:
         self._scenario.stop() # logging active
 
         #---------------------------------#
-        # Step 6: Stop the system and auditd logging.
+        # Step 6: Stop the system and falco logging.
         #---------------------------------#
         self._systemLogger.stop()
         pid_path = os.path.join(self._logDir, 'falco.pid')
         pid_file = open(pid_path, 'r')
         pid = pid_file.readline()
         execute(6, 'sudo kill ' + pid)
+
+        # Change the permission of the events.txt file
+        execute(6, "sudo chmod 644 " + self._falcoLog)
 
         #---------------------------------#
         #Step 7: Stop Scenario (ie stop containers)
@@ -282,12 +277,12 @@ class Experiment:
         saveLogs( self._systemDir, self._experimentpath, rename=False )
         
         # Save the loaded rules used in the experiment folder
-        result = command_line.execute( 'sudo auditctl -l' )
-        rulesfilename = os.path.join(self._experimentpath, 'auditrules.txt')
-        output = OutStream(rulesfilename)
-        for line in result:
-            output.writeln(line)
-        del(output)
+        # result = command_line.execute( 'sudo auditctl -l' )
+        # rulesfilename = os.path.join(self._experimentpath, 'auditrules.txt')
+        # output = OutStream(rulesfilename)
+        # for line in result:
+        #     output.writeln(line)
+        # del(output)
         
         # Now remove all docker volumes
         docker_volume.removeAll()
