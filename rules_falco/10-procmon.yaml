@@ -1,0 +1,80 @@
+- macro: container
+  condition: container.id != host
+
+- rule: log_all_execve
+  desc: log anything that is triggered by the execve system call
+  condition: evt.type = execve and evt.dir = <
+  output: execve system call (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+# a list of paths that might be violated by privilege escaltion attack
+- list: privileged_path
+  items: [/bin/su, /bin/ntfs-3g, /bin/fusermount, /bin/umount, /bin/mount, /sbin/mount.nfs, /sbin/mount.cifs, /usr/bin/chsh, /usr/bin/gpasswd,
+   /usr/bin/pkexec, /usr/bin/passwd, /usr/bin/vmware-user-suid-wrapper, /usr/bin/bwrap, /usr/bin/newgrp, /usr/bin/chfn, /usr/bin/sudo, /usr/sbin/exim4]
+
+# not even sure if I did it right
+- rule: log_exec_su
+  desc: log /bin/su executable access
+  condition: evt.type = execve and evt.dir = < and fd.name in (privileged_path)
+  output: a dangerous access (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+# docker rules
+# can't do this atm, syscalls would burst out leave no space for others
+# - rule: socket-file
+#   desc: log all senmsg and recvmsg syscall
+#   condition: (evt.type = sendmsg or evt.type = recvmsg) and evt.dir = <
+#   output: socket-file (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+#   priority: WARNING
+
+# - list: docker-path
+#   items: [usr/bin/docker, usr/bin/dockerd, usr/bin/docker-proxy]
+
+# # not so sure of -w -a and without setting permissions, he said I don't need this
+# # monitor docker executables
+# - rule: log_docker_exe
+#   desc: log docker related exe
+#   condition: fd.name in (docker-path)
+#   output: not sure tbh (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+#   priority: WARNING
+
+# we are ignoring the auditd rules that are file centric, not so sure how to do that 
+- rule: log-mkdir
+  desc: log all mkdir and mkdirat system calls
+  condition: (evt.type = mkdir or evt.type = mkdirat) and evt.dir = <
+  output: making directory (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+# auditd rules 41
+- rule: log-container-config
+  desc: watch for containers that may change their configuration
+  condition: (evt.type = unshare or evt.type = setns) and evt.dir = <
+  output: config changes (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+# the rest are all files based
+
+# auditd rules 43
+- rule: log-module-load
+  desc: watch for kernel module insertion
+  condition: (evt.type = init_module or evt.type = finit_module) and evt.dir = <
+  output: module load (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+- rule: log-module-unload
+  desc: watch for kernel module insertion
+  condition: evt.type = delete_module and evt.dir = <
+  output: module unload (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+# auditd rules 71
+
+- list: network-syscalls
+  items: [socket,connect,shutdown,bind,listen,socketpair,setsockopt,sendto,recvfrom]
+
+- rule: network-access
+  desc: This is to check if the system is making or recieving connections externally
+  condition: evt.type in (network-syscalls) and evt.dir = <
+  output: network access (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+

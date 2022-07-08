@@ -107,7 +107,7 @@ priority: debug
 
 # Whether or not output to any of the output channels below is
 # buffered. Defaults to false
-buffered_outputs: false
+buffered_outputs: true
 
 # Falco uses a shared buffer between the kernel and userspace to pass
 # system call information. When Falco detects that this buffer is
@@ -188,7 +188,7 @@ output_timeout: 2000
 
 outputs:
   rate: 1
-  max_burst: 1000
+  max_burst: 100000
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.

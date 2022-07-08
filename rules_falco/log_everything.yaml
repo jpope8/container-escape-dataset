@@ -1,0 +1,8 @@
+# for auditd, log everything uses this command: auditctl -a exit,always -S execve
+# could try to do sth similar to this in falco
+# if dir is not specified, it logs both the entry and the exit syscalls
+- rule: log_everything
+  desc: log anything that is triggered by the execve system call
+  condition: container.id = host and evt.dir = < and evt.type = execve
+  output: execve system call (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING

@@ -2112,7 +2112,7 @@
 - rule: system_binaries_network_activity 
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic 
   condition: ((inbound or outbound) and (fd.sockfamily = ip)) and fd.name != '' 
-  output: "Suspicious binary sent/received network traffic (user=%user.name command=%proc.cmdline connection=%fd.name type=%evt.type)" 
+  output: "Suspicious binary sent/received network traffic (user=%user.name command=%proc.cmdline connection=%fd.name type=%evt.type syscall=%syscall.type)" 
   priority: WARNING
 
 # This list allows easily whitelisting system proc names that are

@@ -185,7 +185,7 @@ class Experiment:
         #---------------------------------#
         # Step 2: Start falco logging
         #---------------------------------#
-        execute(2, 'sudo falco -c ' + rulesDir + '/falco.yaml -r ' + rulesDir + '/trial_rules.yaml ' + '-d -P ../../falco_logs/falco.pid')
+        execute(2, 'sudo falco -c ' + rulesDir + '/falco.yaml -r ' + rulesDir + '/10-procmon.yaml ' + '-d -P ../../falco_logs/falco.pid')
 
         # Ignoring the monitoring part just yet, not too sure how to do that
         execute(2, 'ls -la ' + self._falcoLog)
