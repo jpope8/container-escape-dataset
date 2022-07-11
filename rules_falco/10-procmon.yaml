@@ -1,9 +1,15 @@
+# In auditd, we can simply do a thing called never. But here in falco, my thought is we need to add exceptions
+# to every single rule, don't know if there is another way of doing this
+
 - macro: container
   condition: container.id != host
 
+- macro: exclusion
+  condition: not proc.name = systemlogger.py and not proc.name = experiment.py and not proc.name = falco
+
 - rule: log_all_execve
   desc: log anything that is triggered by the execve system call
-  condition: evt.type = execve and evt.dir = <
+  condition: evt.type = execve and evt.dir = < and exclusion
   output: execve system call (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
@@ -15,17 +21,17 @@
 # not even sure if I did it right
 - rule: log_exec_su
   desc: log /bin/su executable access
-  condition: evt.type = execve and evt.dir = < and fd.name in (privileged_path)
+  condition: evt.type = execve and evt.dir = < and fd.name in (privileged_path) and exclusion
   output: a dangerous access (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # docker rules
 # can't do this atm, syscalls would burst out leave no space for others
-# - rule: socket-file
-#   desc: log all senmsg and recvmsg syscall
-#   condition: (evt.type = sendmsg or evt.type = recvmsg) and evt.dir = <
-#   output: socket-file (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
-#   priority: WARNING
+- rule: socket-file
+  desc: log all senmsg and recvmsg syscall
+  condition: (evt.type = sendmsg or evt.type = recvmsg) and evt.dir = < and exclusion
+  output: socket-file (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
 
 # - list: docker-path
 #   items: [usr/bin/docker, usr/bin/dockerd, usr/bin/docker-proxy]
@@ -41,14 +47,14 @@
 # we are ignoring the auditd rules that are file centric, not so sure how to do that 
 - rule: log-mkdir
   desc: log all mkdir and mkdirat system calls
-  condition: (evt.type = mkdir or evt.type = mkdirat) and evt.dir = <
+  condition: (evt.type = mkdir or evt.type = mkdirat) and evt.dir = < and exclusion
   output: making directory (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # auditd rules 41
 - rule: log-container-config
   desc: watch for containers that may change their configuration
-  condition: (evt.type = unshare or evt.type = setns) and evt.dir = <
+  condition: (evt.type = unshare or evt.type = setns) and evt.dir = < and exclusion
   output: config changes (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
@@ -57,13 +63,13 @@
 # auditd rules 43
 - rule: log-module-load
   desc: watch for kernel module insertion
-  condition: (evt.type = init_module or evt.type = finit_module) and evt.dir = <
+  condition: (evt.type = init_module or evt.type = finit_module) and evt.dir = < and exclusion
   output: module load (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 - rule: log-module-unload
   desc: watch for kernel module insertion
-  condition: evt.type = delete_module and evt.dir = <
+  condition: evt.type = delete_module and evt.dir = < and exclusion
   output: module unload (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
@@ -74,7 +80,7 @@
 
 - rule: network-access
   desc: This is to check if the system is making or recieving connections externally
-  condition: evt.type in (network-syscalls) and evt.dir = <
+  condition: evt.type in (network-syscalls) and evt.dir = < and exclusion
   output: network access (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 

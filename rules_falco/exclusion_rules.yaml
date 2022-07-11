@@ -1,0 +1,3 @@
+- rule: xxx
+  append: true 
+  condition: and not proc.pid = 
