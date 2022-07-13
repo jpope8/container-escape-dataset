@@ -5,12 +5,12 @@
   condition: container.id != host
 
 - macro: exclusion
-  condition: not proc.name = systemlogger.py and not proc.name = experiment.py and not proc.name = falco
+  condition: not proc.name = systemlogger.py and not proc.name = experiment.py and not proc.name = falco and not proc.name = systemd-journal and not proc.name = code
 
 - rule: log_all_execve
   desc: log anything that is triggered by the execve system call
   condition: evt.type = execve and evt.dir = < and exclusion
-  output: execve system call (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: execve system call (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # a list of paths that might be violated by privilege escaltion attack
@@ -22,7 +22,7 @@
 - rule: log_exec_su
   desc: log /bin/su executable access
   condition: evt.type = execve and evt.dir = < and fd.name in (privileged_path) and exclusion
-  output: a dangerous access (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: a dangerous access (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # docker rules
@@ -30,7 +30,7 @@
 - rule: socket-file
   desc: log all senmsg and recvmsg syscall
   condition: (evt.type = sendmsg or evt.type = recvmsg) and evt.dir = < and exclusion
-  output: socket-file (user=%user.name container_id=%container.id shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: socket-file (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # - list: docker-path
@@ -48,14 +48,14 @@
 - rule: log-mkdir
   desc: log all mkdir and mkdirat system calls
   condition: (evt.type = mkdir or evt.type = mkdirat) and evt.dir = < and exclusion
-  output: making directory (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: making directory (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # auditd rules 41
 - rule: log-container-config
   desc: watch for containers that may change their configuration
   condition: (evt.type = unshare or evt.type = setns) and evt.dir = < and exclusion
-  output: config changes (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: config changes (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # the rest are all files based
@@ -64,13 +64,13 @@
 - rule: log-module-load
   desc: watch for kernel module insertion
   condition: (evt.type = init_module or evt.type = finit_module) and evt.dir = < and exclusion
-  output: module load (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: module load (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 - rule: log-module-unload
   desc: watch for kernel module insertion
   condition: evt.type = delete_module and evt.dir = < and exclusion
-  output: module unload (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: module unload (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
 # auditd rules 71
@@ -81,6 +81,61 @@
 - rule: network-access
   desc: This is to check if the system is making or recieving connections externally
   condition: evt.type in (network-syscalls) and evt.dir = < and exclusion
-  output: network access (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  output: network access (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
+# user, ppid, pid, permission level (access level), files, sockets(ip source, dest, address, and port), uid, memory(maybe), exe (executable path, refer auditd if needed)
+
+# stig rules 30
+
+- list: time-related-syscalls
+  items: [adjtimex,settimeofday,stime,clock_settime]
+
+- rule: time-change
+  desc: things that could affect time
+  condition: evt.type in (time-related-syscalls) and evt.dir = < and exclusion
+  output: time changes (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+- rule: system-locale
+  desc: Things that could affect system locale
+  condition: (evt.type = sethostname or evt.type = setdomainname) and evt.dir = < and exclusion
+  output: system locale (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+- list: perm-mod-syscalls
+  items: [chmod,fchmod,fchmodat,lchown,fchown,chown,fchownat,setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr]
+
+- rule: perm-mod
+  desc: Discretionary access control permission modification (unsuccessful and successful use of chown/chmod)
+  condition: evt.type in (perm-mod-syscalls) and evt.dir = < and exclusion
+  output: perm mod (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+
+- list: access-syscalls
+  items: [open,creat,truncate,ftruncate,openat,open_by_handle_at]
+
+# this one is not the same as the origianl, origianl also specifies the exit types
+# not sure how to do those tho
+- rule: access
+  desc: Unauthorized access attempts to files
+  condition: evt.type in (access-syscalls) and evt.dir = < and exclusion
+  output: access (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+- rule: mount-syscalls
+  desc: Export to media (successful) You have to mount media before using it.
+  condition: (evt.type = mount or evt.type = umount2) and evt.dir = < and exclusion
+  output: export (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+
+- list: delete-syscalls
+  items: [unlink,unlinkat,rename,renameat]
+
+- rule: delete
+  desc: Files and programs deleted by the user
+  condition: evt.type in (delete-syscalls) and evt.dir = < and exclusion
+  output: delete (user=%user.name uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
+  priority: WARNING
+ 

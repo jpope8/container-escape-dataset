@@ -90,8 +90,8 @@ json_include_tags_property: true
 
 # Send information logs to stderr and/or syslog Note these are *not* security
 # notification logs! These are just Falco lifecycle (and possibly error) logs.
-log_stderr: true
-log_syslog: true
+log_stderr: false
+log_syslog: false
 
 # Minimum log level to include in logs. Note: these levels are
 # separate from the priority field of rules. This refers only to the
@@ -188,13 +188,13 @@ output_timeout: 2000
 
 outputs:
   rate: 1
-  max_burst: 100000
+  max_burst: 1000000
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
 
 syslog_output:
-  enabled: true
+  enabled: false
 
 # If keep_alive is set to true, the file will be opened once and
 # continuously written to, with each output message on its own
@@ -207,7 +207,7 @@ syslog_output:
 file_output:
   enabled: true # false
   keep_alive: true # false
-  filename: /home/user/Documents/falco_logs/experiment/2022-07-11T181006/events.txt
+  filename: /home/user/Documents/falco_logs/experiment/2022-07-13T183449/events.txt
 
 stdout_output:
   enabled: true
