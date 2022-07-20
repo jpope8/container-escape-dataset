@@ -66,18 +66,6 @@ def monitor( keyword ):
             print('PID: ' + pid)
             auditPid(pid, keyword)
 
-# seems like -ef gives a bit more info
-# def exclude(keyword):
-#     result = command_line.execute('ps -ef')
-#     for proclisting in result:
-#         if (keyword in proclisting):
-#             pid = getPid(proclisting)
-#             print('Exclude PID: ' + pid)
-
-
-#     return
-
-
 def exclude( keyword ):
     """
     Excludes any process with the keyword from auditing.

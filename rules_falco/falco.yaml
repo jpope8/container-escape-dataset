@@ -72,10 +72,10 @@ watch_config_files: true
 # If true, the times displayed in log messages and output messages
 # will be in ISO 8601. By default, times are displayed in the local
 # time zone, as governed by /etc/localtime.
-time_format_iso_8601: false
+time_format_iso_8601: true
 
 # Whether to output events in json or text
-json_output: false
+json_output: true
 
 # When using json output, whether or not to include the "output" property
 # itself (e.g. "File below a known binary directory opened for writing
@@ -207,7 +207,7 @@ syslog_output:
 file_output:
   enabled: true # false
   keep_alive: true # false
-  filename: /home/user/Documents/falco_logs/experiment/2022-07-13T183449/events.txt
+  filename: /home/user/Documents/falco_logs/experiment/2022-07-20T154522/events.json
 
 stdout_output:
   enabled: true

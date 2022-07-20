@@ -172,7 +172,7 @@ class Experiment:
 
         # Load rules and start falco logging
         rulesDir = os.path.abspath( '../rules_falco' )
-        self._falcoLog = os.path.join(self._experimentpath, 'events.txt')
+        self._falcoLog = os.path.join(self._experimentpath, 'events.json')
 
         # Configure the conf file so its write to the right dir
         configFalco(rulesDir, self._falcoLog)
@@ -338,3 +338,8 @@ if __name__ == '__main__':
 # a few more things that need to be fixed, events.txt need to be dynamically write to the experiment dir.
 # the permission is a bit off for some reason, might need to chmod it.
 # apart from that, its just loads of general questions remained.
+
+
+# two major things about falco that need to look at
+# multiple files associate with one syscalls
+# annotation timing stuffs, one in unix one in normal time
