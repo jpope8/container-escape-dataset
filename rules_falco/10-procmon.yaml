@@ -5,7 +5,7 @@
   condition: container.id != host
 
 - macro: exclusion
-  condition: not proc.name = systemlogger.py and not proc.name = experiment.py and not proc.name = falco and not proc.name = systemd-journal and not proc.name = code
+  condition: not proc.name = systemlogger.py and not proc.name = experiment.py and not proc.name = falco and not proc.name = code
 
 - rule: log_all_execve
   desc: log anything that is triggered by the execve system call
