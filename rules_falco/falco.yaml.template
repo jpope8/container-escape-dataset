@@ -90,8 +90,8 @@ json_include_tags_property: true
 
 # Send information logs to stderr and/or syslog Note these are *not* security
 # notification logs! These are just Falco lifecycle (and possibly error) logs.
-log_stderr: false
-log_syslog: false
+log_stderr: false # those two are really important, if set to true
+log_syslog: false # it will generate tons of quite useless events
 
 # Minimum log level to include in logs. Note: these levels are
 # separate from the priority field of rules. This refers only to the
@@ -107,7 +107,7 @@ priority: debug
 
 # Whether or not output to any of the output channels below is
 # buffered. Defaults to false
-buffered_outputs: true
+buffered_outputs: true # set to true, but might have no effect
 
 # Falco uses a shared buffer between the kernel and userspace to pass
 # system call information. When Falco detects that this buffer is

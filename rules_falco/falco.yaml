@@ -207,7 +207,7 @@ syslog_output:
 file_output:
   enabled: true # false
   keep_alive: true # false
-  filename: /home/user/Documents/falco_logs/experiment/2022-07-27T130932/events.json
+  filename: /home/user/Documents/falco_logs/experiment/2022-07-30T220519/events.json
 
 stdout_output:
   enabled: true

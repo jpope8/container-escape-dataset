@@ -1,9 +1,10 @@
 # In auditd, we can simply do a thing called never. But here in falco, my thought is we need to add exceptions
-# to every single rule, don't know if there is another way of doing this
+# to every single rule, not sure if there is another way of doing this
 
 - macro: container
   condition: container.id != host
 
+# the exception part, could potentially add more
 - macro: exclusion
   condition: not proc.name = systemlogger.py and not proc.name = experiment.py and not proc.name = falco and not proc.name = code
 
@@ -18,7 +19,6 @@
   items: [/bin/su, /bin/ntfs-3g, /bin/fusermount, /bin/umount, /bin/mount, /sbin/mount.nfs, /sbin/mount.cifs, /usr/bin/chsh, /usr/bin/gpasswd,
    /usr/bin/pkexec, /usr/bin/passwd, /usr/bin/vmware-user-suid-wrapper, /usr/bin/bwrap, /usr/bin/newgrp, /usr/bin/chfn, /usr/bin/sudo, /usr/sbin/exim4]
 
-# not even sure if I did it right
 - rule: log_exec_su
   desc: log /bin/su executable access
   condition: evt.type = execve and evt.dir = < and fd.name in (privileged_path) and exclusion
@@ -36,7 +36,7 @@
 # - list: docker-path
 #   items: [usr/bin/docker, usr/bin/dockerd, usr/bin/docker-proxy]
 
-# # not so sure of -w -a and without setting permissions, he said I don't need this
+# # not so sure of -w -a and without setting permissions
 # # monitor docker executables
 # - rule: log_docker_exe
 #   desc: log docker related exe
@@ -44,7 +44,7 @@
 #   output: not sure tbh (user=%user.name container_id=%container.id image_name=%container.image shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
 #   priority: WARNING
 
-# we are ignoring the auditd rules that are file centric, not so sure how to do that 
+# we are ignoring the auditd rules that are file centric, not too sure how to do that 
 - rule: log-mkdir
   desc: log all mkdir and mkdirat system calls
   condition: (evt.type = mkdir or evt.type = mkdirat) and evt.dir = < and exclusion
@@ -58,9 +58,10 @@
   output: config changes (event_id=%evt.num uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 
-# the rest are all files based
+# the ignored rules are all file based
 
 # auditd rules 43
+
 - rule: log-module-load
   desc: watch for kernel module insertion
   condition: (evt.type = init_module or evt.type = finit_module) and evt.dir = < and exclusion
@@ -116,11 +117,9 @@
 - list: access-syscalls
   items: [open,creat,truncate,ftruncate,openat,open_by_handle_at]
 
-# this one is not the same as the origianl, origianl also specifies the exit types
-# not sure how to do those tho
 - rule: access
   desc: Unauthorized access attempts to files
-  condition: (evt.type in (access-syscalls) and (evt.res = EACCES or evt.res = EPERM)) and evt.dir = < and exclusion
+  condition: (evt.type in (access-syscalls) and (evt.res = EACCES or evt.res = EPERM)) and evt.dir = < and exclusion # evt.res specifies the exit code/type
   output: access (event_id=%evt.num uid=%user.uid pid=%proc.pid ppid=%proc.ppid files=%fd.name container_id=%container.id image_name=%container.image exe=%proc.exe shell=%proc.name cmdline=%proc.cmdline syscall=%syscall.type)
   priority: WARNING
 

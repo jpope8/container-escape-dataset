@@ -104,10 +104,8 @@ def configFalco(rulesDir, falcoLog):
     while (templateFile.hasNextLine()):
         line = templateFile.readLine()
         if (line.startswith('  filename:')):
-            print("1")
-            print(falcoLog)
+            # print(falcoLog)
             line = '  filename: ' + os.path.abspath(falcoLog)
-            print(line)
         falcoconfFile.writeln(line)
     del(templateFile)
     del(falcoconfFile)
@@ -185,11 +183,13 @@ class Experiment:
         #---------------------------------#
         # Step 2: Start falco logging
         #---------------------------------#
+        # -c, the path where we load the configuration file
+        # -r, the path where we load the rules file, can use multiple -r
+        # -d, uses falco daemon
+        # -P, where to store the pid of the falco daemon, so we can use it to kill the process later
         execute(2, 'sudo falco -c ' + rulesDir + '/falco.yaml -r ' + rulesDir + '/10-procmon.yaml ' + '-d -P ../../falco_logs/falco.pid')
 
-        # Ignoring the monitoring part just yet, not too sure how to do that
         execute(2, 'ls -la ' + self._falcoLog)
-
 
          #---------------------------------#
         #Step 3: Start scenario
@@ -203,7 +203,7 @@ class Experiment:
         
         # Schedule event to stop the experiment
         self._scheduler.enter( self._seconds, 1, self._stopExperiment )
-        # self._scheduler.enter( self._statusInterval, 5, self._status ) #don't think this is triggered anyway
+        # self._scheduler.enter( self._statusInterval, 5, self._status ) # don't think this is triggered anyway
 
         # Run main schedule loop to let scenarios respond to events.
         # The _stopExperiment is a non-scenario event that will ensure
@@ -250,13 +250,14 @@ class Experiment:
         #---------------------------------#
         # Step 6: Stop the system and falco logging.
         #---------------------------------#
+        # manually kill the process by using the process id we recorded before
         self._systemLogger.stop()
         pid_path = os.path.join(self._logDir, 'falco.pid')
         pid_file = open(pid_path, 'r')
         pid = pid_file.readline()
         execute(6, 'sudo kill ' + pid)
 
-        # Change the permission of the events.txt file
+        # Change the permission of the events.json file, weird falco permission requirement
         execute(6, "sudo chmod 644 " + self._falcoLog)
 
         #---------------------------------#
@@ -327,19 +328,9 @@ if __name__ == '__main__':
     main()
 
 
-# Think there are a few things I need to do to integrate falco here
-# 1. command to load the conf file, okay so when running on a new system, there is a need to have a copy of conf file and we can just run it starightaway, don't need to copy like auditd to some dir
-# 2. command to load the rules, that should be quite easy
-# 3. command to store the logs, this is a bit tricky, I am not too sure the structure, say annotated, how do I put it. System log I would say ignore from now
-# 4. think there are a few other files in the log, also the command line arguments need to change, probably modify them later on.
-# kinda need to read about stream first, no clue what it does.
+# There are a few things that I didn't have time to work on and wasn't really a priority at the time.
+# Firstly, the systemLogger never works, so the system logs have always been empty on this vm.
+# Secondly, I have never tested privilege escalation attack
 
-
-# a few more things that need to be fixed, events.txt need to be dynamically write to the experiment dir.
-# the permission is a bit off for some reason, might need to chmod it.
-# apart from that, its just loads of general questions remained.
-
-
-# two major things about falco that need to look at
-# multiple files associate with one syscalls
-# annotation timing stuffs, one in unix one in normal time
+# Fun little thing to mention, I kinda used a trick to kill the process, another approach is to find that particular pid by using the ps command and go through it.
+# Or, I believe python subprocess package has methods to kill processes, using popen if I remember it right.
